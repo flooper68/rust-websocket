@@ -1,26 +1,26 @@
-use std::time::Duration;
 
-use tokio::{net::{TcpListener}, time::sleep};
-use futures_util::{StreamExt, SinkExt};
-use tokio_tungstenite::tungstenite::Message;
+use tokio::{net::TcpListener, sync::mpsc};
+use crate::connection::handle_connection;
+
+mod session;
+mod transport;
+mod connection;
 
 const PORT: &str = "6464";
 
 #[tokio::main]
 async fn main() {
+    let (command_sender, command_receiver) = mpsc::unbounded_channel::<session::SessionCommand>();
+
+    tokio::task::spawn(session::start_session(command_receiver));
+
     let addr = format!("0.0.0.0:{}", PORT);
 
-
-    let listener = TcpListener::bind(&addr)
-    .await
-    .expect("Listening to TCP failed.");
-
-
+    let listener = TcpListener::bind(&addr).await.expect("Listening to TCP failed.");
 
     println!("Listening on: {}", addr);
 
-    // A counter to use as client ids.
-    let mut id = 0;
+    let mut connection_id = 1;
 
     // Accept new clients.
     while let Ok((stream, peer)) = listener.accept().await {
@@ -28,15 +28,8 @@ async fn main() {
             Err(e) => println!("Websocket connection error : {}", e),
             Ok(ws_stream) => {
                 println!("New Connection : {}", peer);
-                id += 1;
-                let (mut sender, mut receiver) = ws_stream.split();
-
-                while(true) {
-                    sleep(Duration::from_millis(1000)).await;
-                    let _ = sender.send(Message::Text("Hello world".to_string())).await;
-                    println!("Hello world send!");
-                }
-
+                tokio::task::spawn(handle_connection(ws_stream, command_sender.clone(),connection_id));
+                connection_id = connection_id + 1;
             }
         }
     }
