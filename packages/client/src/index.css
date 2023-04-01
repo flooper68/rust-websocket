@@ -1,0 +1,156 @@
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Roboto', sans-serif;
+  color: rgb(78, 78, 78);
+}
+
+h3 {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.shadow {
+  box-shadow: 0px 7px 14px rgba(0, 0, 0, 0.05),
+    0px 0px 3.12708px rgba(0, 0, 0, 0.08),
+    0px 0px 0.931014px rgba(0, 0, 0, 0.17);
+}
+
+.top-panel-section {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  padding: 4px;
+  pointer-events: all;
+}
+
+.selection-panel {
+  position: absolute;
+  left: 20px;
+  top: 100px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  display: grid;
+  grid-auto-flow: row;
+  gap: 25px;
+}
+
+.control-row {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+}
+
+.top-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  place-items: center;
+  pointer-events: none;
+}
+
+.top-panel-controls {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  grid-column: 2;
+}
+
+.top-panel-right {
+  justify-self: end;
+}
+
+.icon-btn {
+  padding: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  background: none;
+  font-size: 16px;
+  border-radius: 10px;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.outlined {
+  border: 1px solid #4d40475e;
+}
+
+.icon-btn:hover {
+  background-color: #f2f2f2;
+}
+
+.icon-btn:active {
+  border: 1px solid #898c8e;
+}
+
+.icon-btn[data-toggled='true'] {
+  background-color: #0326ff36;
+}
+
+input[type='color'] {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  padding: 8;
+}
+
+.divider {
+  height: 18px;
+  border-left: 1px solid #4d40475e;
+  margin: 0 5px;
+}
+
+.dev-tools-container {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  width: 1000px;
+  overflow: auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.event-row {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  border-bottom: 1px solid #4d40475e;
+  padding: 10px 0;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dev-tools-close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 20px;
+  cursor: pointer;
+}
