@@ -10,7 +10,9 @@ export {
   CreateRectangle,
   CreateImage,
   DisconnectClient,
-  MoveClientCursor
+  MoveClientCursor,
+  SelectNodes,
+  AddNodeToSelection
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
 export { SessionEventType } from './session/types.js'

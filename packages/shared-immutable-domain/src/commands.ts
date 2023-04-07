@@ -1,4 +1,7 @@
-import { getRandomColor } from '@shared/common'
+import {
+  DocumentSessionEvent,
+  DocumentSessionState
+} from './document-session-root.js'
 import { NodeFactories } from './document/factories.js'
 import {
   Fill,
@@ -14,10 +17,6 @@ import {
   PositionValue,
   RectangleCreated
 } from './document/types.js'
-import {
-  DocumentSessionEvent,
-  DocumentSessionState
-} from './document-session-root.js'
 import { SessionSelectors } from './selectors.js'
 import { SessionFactories } from './session/factories.js'
 import {
@@ -40,7 +39,9 @@ export enum DocumentSessionCommandType {
   DisconnectClient = 'DisconnectClient',
   MoveClientCursor = 'MoveClientCursor',
   CreateRectangle = 'CreateRectangle',
-  CreateImage = 'CreateImage'
+  CreateImage = 'CreateImage',
+  SelectNodes = 'SelectNodes',
+  AddNodeToSelection = 'NodeAddedToSelection'
 }
 
 export class LockSelection {
@@ -152,6 +153,26 @@ export class CreateImage {
   ) {}
 }
 
+export class SelectNodes {
+  readonly type = DocumentSessionCommandType.SelectNodes
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+      nodes: NodeUuid[]
+    }
+  ) {}
+}
+
+export class AddNodeToSelection {
+  readonly type = DocumentSessionCommandType.AddNodeToSelection
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+      node: NodeUuid
+    }
+  ) {}
+}
+
 export type DocumentSessionCommand =
   | LockSelection
   | UnlockSelection
@@ -164,6 +185,8 @@ export type DocumentSessionCommand =
   | MoveClientCursor
   | CreateImage
   | CreateRectangle
+  | SelectNodes
+  | AddNodeToSelection
 
 interface CommandContext {
   state: DocumentSessionState
@@ -381,6 +404,54 @@ function createImage(command: CreateImage, context: CommandContext) {
   context.dispatch(events)
 }
 
+function selectNodes(command: SelectNodes, context: CommandContext) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const events = [
+    new NodesSelected({
+      clientUuid: command.payload.clientUuid,
+      nodes: command.payload.nodes
+    })
+  ]
+
+  context.dispatch(events)
+}
+
+function addNodeToSelection(
+  command: AddNodeToSelection,
+  context: CommandContext
+) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const activeSelection = SessionSelectors.getClientActiveSelection(
+    command.payload.clientUuid,
+    context.state
+  )
+
+  const events = [
+    new NodesSelected({
+      clientUuid: command.payload.clientUuid,
+      nodes: [...activeSelection.map((node) => node.uuid), command.payload.node]
+    })
+  ]
+
+  context.dispatch(events)
+}
+
 export const DocumentSessionCommands = {
   lockSelection,
   unlockSelection,
@@ -392,5 +463,6 @@ export const DocumentSessionCommands = {
   disconnectClient,
   moveClientCursor,
   createRectangle,
-  createImage
+  createImage,
+  selectNodes,addNodeToSelection
 }

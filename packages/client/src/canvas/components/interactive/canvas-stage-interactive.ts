@@ -1,5 +1,4 @@
-import { MoveClientCursor } from '@shared/immutable-domain'
-import { v4 } from 'uuid'
+import { MoveClientCursor, SelectNodes } from '@shared/immutable-domain'
 import { CLIENT_UUID, WsClient } from '../../../client/ws-client'
 import { InteractiveComponent } from '../../core/core-types'
 
@@ -22,7 +21,12 @@ export class CanvasStageInteractive implements InteractiveComponent {
   onHitTargetLeave() {}
 
   onClick() {
-    console.warn(`Not implemented yet`)
+    this._client.dispatch(
+      new SelectNodes({
+        clientUuid: CLIENT_UUID,
+        nodes: []
+      })
+    )
   }
 
   onMove(x: number, y: number) {

@@ -1,4 +1,6 @@
+import { SelectNodes, AddNodeToSelection } from '@shared/immutable-domain'
 import { DisplayObject } from 'pixi.js'
+import { WsClient, CLIENT_UUID } from '../../../client/ws-client'
 import { CanvasComponent, InteractiveComponent } from '../../core/core-types'
 
 export class CanvasNodeInteractive implements InteractiveComponent {
@@ -7,7 +9,8 @@ export class CanvasNodeInteractive implements InteractiveComponent {
 
   constructor(
     private readonly _displayObject: DisplayObject,
-    private readonly _canvasComponent: CanvasComponent
+    private readonly _canvasComponent: CanvasComponent,
+    private readonly _client: WsClient
   ) {}
 
   canHit() {
@@ -32,9 +35,19 @@ export class CanvasNodeInteractive implements InteractiveComponent {
 
   onClick(shiftKey: boolean) {
     if (shiftKey) {
-      console.warn(`Not implemented yet`)
+      this._client.dispatch(
+        new AddNodeToSelection({
+          clientUuid: CLIENT_UUID,
+          node: this._canvasComponent.uuid
+        })
+      )
     } else {
-      console.warn(`Not implemented yet`)
+      this._client.dispatch(
+        new SelectNodes({
+          clientUuid: CLIENT_UUID,
+          nodes: [this._canvasComponent.uuid]
+        })
+      )
     }
   }
 }

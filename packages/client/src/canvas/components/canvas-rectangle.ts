@@ -33,7 +33,7 @@ export class CanvasRectangle {
     private readonly _graphics: Graphics,
     private readonly _client: WsClient
   ) {
-    this.interactive = new CanvasNodeInteractive(_graphics, this)
+    this.interactive = new CanvasNodeInteractive(_graphics, this, _client)
     this.draggable = new DraggableSceneNode(this.uuid)
   }
 

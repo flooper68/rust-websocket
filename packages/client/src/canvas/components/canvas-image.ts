@@ -28,7 +28,7 @@ export class CanvasImage {
     private readonly _sprite: Sprite,
     private readonly _client: WsClient
   ) {
-    this.interactive = new CanvasNodeInteractive(_sprite, this)
+    this.interactive = new CanvasNodeInteractive(_sprite, this, _client)
     this.draggable = new DraggableSceneNode(this.uuid)
   }
 

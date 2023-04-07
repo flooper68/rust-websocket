@@ -153,6 +153,18 @@ export class DocumentSessionRoot {
         },
         (c) => DocumentSessionCommands.unlockSelection(c, context)
       )
+      .with(
+        {
+          type: DocumentSessionCommandType.SelectNodes
+        },
+        (c) => DocumentSessionCommands.selectNodes(c, context)
+      )
+      .with(
+        {
+          type: DocumentSessionCommandType.AddNodeToSelection
+        },
+        (c) => DocumentSessionCommands.addNodeToSelection(c, context)
+      )
       .exhaustive()
   }
 }
