@@ -1,3 +1,4 @@
+import { getRandomColor } from '@shared/common'
 import { NodeFactories } from './document/factories.js'
 import {
   Fill,
@@ -136,6 +137,7 @@ export class CreateRectangle {
     public payload: {
       clientUuid: ClientUuid
       uuid: NodeUuid
+      fill: Fill
     }
   ) {}
 }
@@ -337,7 +339,7 @@ function createRectangle(command: CreateRectangle, context: CommandContext) {
 
   const rectangle = NodeFactories.createRectangle({
     uuid: command.payload.uuid,
-    fill: 'red'
+    fill: command.payload.fill
   })
 
   const events = [

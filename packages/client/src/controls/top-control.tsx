@@ -6,6 +6,7 @@ import { v4 } from 'uuid'
 import { CreateImage, CreateRectangle } from '@shared/immutable-domain'
 import { CLIENT_UUID, WsClient } from '../client/ws-client'
 import { COLLECT_DATA } from '../dev-tools/dev-tools'
+import { getRandomColor } from '@shared/common'
 
 export function TopControl(props: {
   openDevTools: () => void
@@ -23,7 +24,11 @@ export function TopControl(props: {
 
   const createRectangle = useCallback(() => {
     client.dispatch(
-      new CreateRectangle({ uuid: v4(), clientUuid: CLIENT_UUID })
+      new CreateRectangle({
+        uuid: v4(),
+        clientUuid: CLIENT_UUID,
+        fill: getRandomColor()
+      })
     )
   }, [client])
 
