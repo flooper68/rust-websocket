@@ -1,11 +1,13 @@
-import { DeselectAll, MoveClientCursor } from '@shared/domain'
+import { MoveClientCursor } from '@shared/immutable-domain'
 import { v4 } from 'uuid'
-import { CLIENT_UUID, dispatch } from '../../../ws/use-ws'
+import { CLIENT_UUID, WsClient } from '../../../client/ws-client'
 import { InteractiveComponent } from '../../core/core-types'
 
 export class CanvasStageInteractive implements InteractiveComponent {
   readonly zIndex = 0
   readonly ignoreHitTestForMove = true
+
+  constructor(private readonly _client: WsClient) {}
 
   canHit() {
     return true
@@ -20,28 +22,16 @@ export class CanvasStageInteractive implements InteractiveComponent {
   onHitTargetLeave() {}
 
   onClick() {
-    dispatch(
-      new DeselectAll(
-        { clientUuid: CLIENT_UUID },
-        {
-          correlationUuid: v4()
-        }
-      )
-    )
+    console.warn(`Not implemented yet`)
   }
 
   onMove(x: number, y: number) {
-    dispatch(
-      new MoveClientCursor(
-        {
-          clientUuid: CLIENT_UUID,
-          left: x,
-          top: y
-        },
-        {
-          correlationUuid: v4()
-        }
-      )
+    this._client.dispatch(
+      new MoveClientCursor({
+        clientUuid: CLIENT_UUID,
+        left: x,
+        top: y
+      })
     )
   }
 }

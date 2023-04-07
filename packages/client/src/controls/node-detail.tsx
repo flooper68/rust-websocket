@@ -1,67 +1,6 @@
-import {
-  DeleteSelectedNodes,
-  DomainEvent,
-  DomainEventType,
-  DomainSelectors,
-  LockSelectedNodes,
-  Node,
-  NodeKind,
-  SetSelectedRectanglesFill,
-  UnlockSelectedNode
-} from '@shared/domain'
-import { useCallback, useEffect, useState } from 'react'
+import { DomainEvent, DomainEventType, Node, NodeKind } from '@shared/domain'
+import { useCallback, useState } from 'react'
 import { FaLock, FaTrashAlt, FaUnlock } from 'react-icons/fa'
-import { v4 } from 'uuid'
-import {
-  $domainStream,
-  CLIENT_UUID,
-  dispatch,
-  getSessionState
-} from '../ws/use-ws'
-
-function deleteNodes() {
-  dispatch(
-    new DeleteSelectedNodes(
-      { clientUuid: CLIENT_UUID },
-      {
-        correlationUuid: v4()
-      }
-    )
-  )
-}
-
-function lockNodes() {
-  dispatch(
-    new LockSelectedNodes(
-      { clientUuid: CLIENT_UUID },
-      {
-        correlationUuid: v4()
-      }
-    )
-  )
-}
-
-function unlockNodes() {
-  dispatch(
-    new UnlockSelectedNode(
-      { clientUuid: CLIENT_UUID },
-      {
-        correlationUuid: v4()
-      }
-    )
-  )
-}
-
-function setSelectedRectanglesFill(fill: string) {
-  dispatch(
-    new SetSelectedRectanglesFill(
-      { fill, clientUuid: CLIENT_UUID },
-      {
-        correlationUuid: v4()
-      }
-    )
-  )
-}
 
 export function NodeDetail() {
   const [assets, setAssets] = useState<Node[]>([])
@@ -76,9 +15,9 @@ export function NodeDetail() {
       case DomainEventType.NodeSelected:
       case DomainEventType.NodeDeselected:
       case DomainEventType.RectangleFillSet: {
-        setAssets(
-          DomainSelectors.getActiveSelection(CLIENT_UUID, getSessionState())
-        )
+        // setAssets(
+        //   DomainSelectors.getActiveSelection(CLIENT_UUID, getSessionState())
+        // )
         break
       }
       case DomainEventType.ClientCommandAddedToHistory:
@@ -102,13 +41,29 @@ export function NodeDetail() {
     }
   }, [])
 
-  useEffect(() => {
-    const sub = $domainStream.subscribe(handleEvent)
-
-    return () => {
-      sub.unsubscribe()
-    }
+  const lockNodes = useCallback(() => {
+    console.warn(`Not implemented`)
   }, [])
+
+  const unlockNodes = useCallback(() => {
+    console.warn(`Not implemented`)
+  }, [])
+
+  const deleteNodes = useCallback(() => {
+    console.warn(`Not implemented`)
+  }, [])
+
+  const setSelectedRectanglesFill = useCallback(() => {
+    console.warn(`Not implemented`)
+  }, [])
+
+  // useEffect(() => {
+  //   const sub = $domainStream.subscribe(handleEvent)
+
+  //   return () => {
+  //     sub.unsubscribe()
+  //   }
+  // }, [])
 
   if (assets.length === 0) return null
 
@@ -163,7 +118,7 @@ export function NodeDetail() {
                 return '#000000'
               }, '#000000')}
               onChange={(e) => {
-                setSelectedRectanglesFill(e.target.value)
+                setSelectedRectanglesFill()
               }}
             />
           </div>

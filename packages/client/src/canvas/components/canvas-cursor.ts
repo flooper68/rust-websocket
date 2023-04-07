@@ -1,10 +1,11 @@
-import { DomainSelectors, Uuid } from '@shared/domain'
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
-import { CLIENT_UUID, getSessionState } from '../../ws/use-ws'
+import { CLIENT_UUID, WsClient } from '../../client/ws-client'
 import { parseHexColor } from './parse-hex-color'
 
-function getClientOrFail(uuid: string) {
-  const client = DomainSelectors.getClient(uuid, getSessionState())
+function getClientOrFail(uuid: string, wsClient: WsClient) {
+  const client = wsClient.getState().session.clients[uuid]
+
+  console.log(client)
 
   if (!client) {
     throw new Error(
@@ -26,16 +27,17 @@ export function parseClientCursorUuid(uuid: string) {
 export class CanvasCursor {
   private constructor(
     public readonly uuid: string,
-    private readonly cursor: Graphics,
-    private readonly border: Graphics,
-    private readonly text: Text
+    private readonly _cursor: Graphics,
+    private readonly _border: Graphics,
+    private readonly _text: Text,
+    private readonly _client: WsClient
   ) {}
 
-  static create(clientUuid: string, stage: Container) {
+  static create(clientUuid: string, stage: Container, wsClient: WsClient) {
     console.log(`Creating CanvasCursor component ${clientUuid}.`)
 
-    const client = getClientOrFail(clientUuid)
-    const color = parseHexColor(client.color)
+    const client = getClientOrFail(clientUuid, wsClient)
+    const color = parseHexColor('#FF0000')
 
     var cursor = new Graphics()
     cursor.zIndex = 10010
@@ -55,7 +57,7 @@ export class CanvasCursor {
       fontSize: 12,
       fill: 0xffffff
     })
-    const text = new Text(client.name, style)
+    const text = new Text('client.name', style)
     text.zIndex = 10010
 
     var border = new Graphics()
@@ -79,7 +81,8 @@ export class CanvasCursor {
       getClientCursorUuid(clientUuid),
       cursor,
       border,
-      text
+      text,
+      wsClient
     )
     component.render()
 
@@ -87,27 +90,27 @@ export class CanvasCursor {
   }
 
   render() {
-    const client = DomainSelectors.getClient(
+    const client = getClientOrFail(
       parseClientCursorUuid(this.uuid),
-      getSessionState()
+      this._client
     )
 
     console.log(`Rendering CanvasCursor ${this.uuid}.`, client)
 
     if (!client) {
-      this.border.visible = false
-      this.cursor.visible = false
-      this.text.visible = false
+      this._border.visible = false
+      this._cursor.visible = false
+      this._text.visible = false
       return
     }
 
-    this.cursor.position.x = client.cursor.left
-    this.cursor.position.y = client.cursor.top
+    this._cursor.position.x = client.cursor.left
+    this._cursor.position.y = client.cursor.top
 
-    this.border.position.x = client.cursor.left - 4
-    this.border.position.y = client.cursor.top + 15
+    this._border.position.x = client.cursor.left - 4
+    this._border.position.y = client.cursor.top + 15
 
-    this.text.position.x = client.cursor.left + 10
-    this.text.position.y = client.cursor.top + 16
+    this._text.position.x = client.cursor.left + 10
+    this._text.position.y = client.cursor.top + 16
   }
 }

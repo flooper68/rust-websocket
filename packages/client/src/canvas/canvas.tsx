@@ -1,9 +1,14 @@
-import { DomainEventType, DomainState, NodeKind, Uuid } from '@shared/domain'
 import { startMeasurement } from '@shared/domain/src/measure'
+import {
+  DocumentEventType,
+  DocumentSessionState,
+  NodeKind,
+  NodeStatus,
+  SessionEventType
+} from '@shared/immutable-domain'
 import { Application, settings as PIXISettings } from 'pixi.js'
 import { useEffect, useRef } from 'react'
-import { $domainStream, getSessionState } from '../ws/use-ws'
-import { connectClient } from '../ws/use-ws'
+import { WsClient } from '../client/ws-client'
 import {
   CanvasBoundingBox,
   getBoundingBoxUuid
@@ -15,7 +20,7 @@ import { CanvasRectangle } from './components/canvas-rectangle'
 import { CanvasStage } from './components/canvas-stage'
 import { CanvasInteractions } from './core/canvas-interactions'
 
-function createApplication(canvasContainer: HTMLElement) {
+function createApplication(canvasContainer: HTMLElement, client: WsClient) {
   const app = new Application({
     antialias: false,
     resolution: 5,
@@ -38,18 +43,18 @@ function createApplication(canvasContainer: HTMLElement) {
 
   const interactions = new CanvasInteractions(canvasComponents, app.stage)
 
-  function initialize(state: DomainState) {
+  function initialize(state: DocumentSessionState) {
     console.log(`Initializing renderer with state:`, state)
 
     createStage()
 
-    Object.values(state.connections).forEach((client) => {
+    Object.values(state.session.clients).forEach((client) => {
       createCursor(client.uuid)
       createBoundingBox(client.uuid)
     })
 
-    Object.values(state.nodes).forEach((node) => {
-      if (node.deleted) {
+    Object.values(state.document.nodes).forEach((node) => {
+      if (node.status === NodeStatus.Deleted) {
         return
       }
       switch (node.kind) {
@@ -59,10 +64,6 @@ function createApplication(canvasContainer: HTMLElement) {
         }
         case NodeKind.Image: {
           createImage(node.uuid)
-          break
-        }
-        case NodeKind.Text: {
-          console.error('Text not supported yet')
           break
         }
         default: {
@@ -96,23 +97,23 @@ function createApplication(canvasContainer: HTMLElement) {
   }
 
   function createStage() {
-    addComponent(CanvasStage.create(app.stage))
+    addComponent(CanvasStage.create(app.stage, client))
   }
 
-  function createImage(uuid: Uuid) {
-    addComponent(CanvasImage.create(uuid, app.stage))
+  function createImage(uuid: string) {
+    addComponent(CanvasImage.create(uuid, app.stage, client))
   }
 
-  function createRectangle(uuid: Uuid) {
-    addComponent(CanvasRectangle.create(uuid, app.stage))
+  function createRectangle(uuid: string) {
+    addComponent(CanvasRectangle.create(uuid, app.stage, client))
   }
 
   function createCursor(clientUuid: string) {
-    addComponent(CanvasCursor.create(clientUuid, app.stage))
+    addComponent(CanvasCursor.create(clientUuid, app.stage, client))
   }
 
   function createBoundingBox(clientUuid: string) {
-    addComponent(CanvasBoundingBox.create(clientUuid, app.stage))
+    addComponent(CanvasBoundingBox.create(clientUuid, app.stage, client))
   }
 
   function renderComponent(uuid: string) {
@@ -127,7 +128,7 @@ function createApplication(canvasContainer: HTMLElement) {
     component.render()
   }
 
-  function renderNode(uuid: Uuid) {
+  function renderNode(uuid: string) {
     renderComponent(uuid)
   }
 
@@ -153,11 +154,11 @@ function createApplication(canvasContainer: HTMLElement) {
   }
 }
 
-export type ApplicationClient = ReturnType<typeof createApplication>
-
 let canvasInitialized = false
 
-export function Canvas() {
+export function Canvas(props: { client: WsClient }) {
+  const { client } = props
+
   const canvasRef = useRef<null | HTMLDivElement>(null)
 
   useEffect(() => {
@@ -173,73 +174,72 @@ export function Canvas() {
 
     console.log(`Initializing canvas.`)
 
-    const app = createApplication(canvasRef.current)
+    const app = createApplication(canvasRef.current, client)
 
-    $domainStream.subscribe((event) => {
+    client.domainStream$.subscribe((event) => {
       const measure = startMeasurement(`Rendering event ${event.type}`)
 
       switch (event.type) {
-        case DomainEventType.RectangleCreated: {
+        case DocumentEventType.RectangleCreated: {
           app.createRectangle(event.payload.uuid)
           break
         }
-        case DomainEventType.ImageCreated: {
+        case DocumentEventType.ImageCreated: {
           app.createImage(event.payload.uuid)
           break
         }
-        case DomainEventType.ClientConnected: {
+        case SessionEventType.ClientConnected: {
           app.createCursor(event.payload.uuid)
           app.createBoundingBox(event.payload.uuid)
           break
         }
-        case DomainEventType.ClientCursorMoved: {
+        case SessionEventType.ClientCursorMoved: {
           app.renderClientCursor(event.payload.clientUuid)
           break
         }
-        case DomainEventType.ClientDisconnected: {
+        case SessionEventType.ClientDisconnected: {
           app.renderClientCursor(event.payload.uuid)
           app.renderClientBoundingBox(event.payload.uuid)
           break
         }
-        case DomainEventType.NodeDeselected:
-        case DomainEventType.NodeSelected: {
-          app.renderClientBoundingBox(event.payload.clientUuid)
-          break
-        }
-        case DomainEventType.NodeDeleted:
-        case DomainEventType.NodePositionSet:
-        case DomainEventType.NodeMoved: {
-          app.renderClientBoundingBox(event.payload.clientUuid)
-          app.renderNode(event.payload.uuid)
-          break
-        }
+        //   case DomainEventType.NodeDeselected:
+        //   case DomainEventType.NodeSelected: {
+        //     app.renderClientBoundingBox(event.payload.clientUuid)
+        //     break
+        //   }
+        //   case DomainEventType.NodeDeleted:
+        //   case DomainEventType.NodePositionSet:
+        //   case DomainEventType.NodeMoved: {
+        //     app.renderClientBoundingBox(event.payload.clientUuid)
+        //     app.renderNode(event.payload.uuid)
+        //     break
+        //   }
 
-        case DomainEventType.NodeRestored:
-        case DomainEventType.RectangleFillSet: {
-          app.renderNode(event.payload.uuid)
-          break
-        }
-        case DomainEventType.ClientCommandAddedToHistory:
-        case DomainEventType.LastClientCommandRedone:
-        case DomainEventType.LastClientCommandRedoSkipped:
-        case DomainEventType.LastClientCommandUndone:
-        case DomainEventType.LastClientCommandUndoSkipped:
-        case DomainEventType.PositionDraggingStarted:
-        case DomainEventType.NodeLocked:
-        case DomainEventType.NodeUnlocked: {
-          break
-        }
+        //   case DomainEventType.NodeRestored:
+        //   case DomainEventType.RectangleFillSet: {
+        //     app.renderNode(event.payload.uuid)
+        //     break
+        //   }
+        //   case DomainEventType.ClientCommandAddedToHistory:
+        //   case DomainEventType.LastClientCommandRedone:
+        //   case DomainEventType.LastClientCommandRedoSkipped:
+        //   case DomainEventType.LastClientCommandUndone:
+        //   case DomainEventType.LastClientCommandUndoSkipped:
+        //   case DomainEventType.PositionDraggingStarted:
+        //   case DomainEventType.NodeLocked:
+        //   case DomainEventType.NodeUnlocked: {
+        //     break
+        //   }
         default: {
-          const check: never = event
-          throw new Error(`Unhandled event ${check}.`)
+          console.warn(`Unhandled event`, event)
+          // const check: never = event
+          // throw new Error(`Unhandled event ${check}.`)
         }
       }
       measure()
     })
 
-    connectClient()?.then(() => {
-      app.initialize(getSessionState())
-    })
+    app.initialize(client.getState())
 
     console.log(`Canvas initialized.`)
   }, [])

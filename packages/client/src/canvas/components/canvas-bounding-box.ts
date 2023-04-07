@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js'
-import { getSessionState } from '../../ws/use-ws'
+import { WsClient } from '../../client/ws-client'
 import { RenderingSelectors } from '../rendering-selectors'
 import { DraggableBoundingBox } from './draggable/draggable-bounding-box'
 import { BoundingBoxInteractive } from './interactive/bounding-box-interactive'
@@ -21,13 +21,14 @@ export class CanvasBoundingBox {
 
   private constructor(
     public readonly uuid: string,
-    private readonly graphics: Graphics
+    private readonly _graphics: Graphics,
+    private readonly _client: WsClient
   ) {
-    this.interactive = new BoundingBoxInteractive(this.graphics)
+    this.interactive = new BoundingBoxInteractive(this._graphics)
     this.draggable = new DraggableBoundingBox(parseClientUuidUuid(this.uuid))
   }
 
-  static create(clientUuid: string, stage: Container) {
+  static create(clientUuid: string, stage: Container, client: WsClient) {
     console.log(`Creating CanvasBoundingBox component ${clientUuid}.`)
 
     const rectangle = new Graphics()
@@ -49,7 +50,8 @@ export class CanvasBoundingBox {
 
     const component = new CanvasBoundingBox(
       getBoundingBoxUuid(clientUuid),
-      rectangle
+      rectangle,
+      client
     )
     component.render()
 
@@ -59,23 +61,23 @@ export class CanvasBoundingBox {
   render() {
     const boundingBox = RenderingSelectors.getClientBoundingBox(
       parseClientUuidUuid(this.uuid),
-      getSessionState()
+      this._client.getState()
     )
 
     console.log(`Rendering CanvasBoundingBox ${this.uuid}.`, boundingBox)
 
     if (boundingBox == null) {
-      this.graphics.visible = false
+      this._graphics.visible = false
       return
     }
 
     const color = parseHexColor(boundingBox.color)
 
-    this.graphics.visible = true
-    this.graphics.tint = color
-    this.graphics.width = boundingBox.width + 2 * OVERLAP
-    this.graphics.height = boundingBox.height + 2 * OVERLAP
-    this.graphics.position.x = boundingBox.left - OVERLAP
-    this.graphics.position.y = boundingBox.top - OVERLAP
+    this._graphics.visible = true
+    this._graphics.tint = color
+    this._graphics.width = boundingBox.width + 2 * OVERLAP
+    this._graphics.height = boundingBox.height + 2 * OVERLAP
+    this._graphics.position.x = boundingBox.left - OVERLAP
+    this._graphics.position.y = boundingBox.top - OVERLAP
   }
 }

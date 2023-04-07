@@ -1,4 +1,5 @@
 import { Container } from 'pixi.js'
+import { WsClient } from '../../client/ws-client'
 import { DraggableCanvasStage } from './draggable/draggable-canvas-stage'
 import { CanvasStageInteractive } from './interactive/canvas-stage-interactive'
 
@@ -10,12 +11,12 @@ export class CanvasStage {
   readonly interactive: CanvasStageInteractive
   readonly draggable: DraggableCanvasStage
 
-  private constructor(private readonly _stage: Container) {
-    this.interactive = new CanvasStageInteractive()
+  private constructor(private readonly _stage: Container, client: WsClient) {
+    this.interactive = new CanvasStageInteractive(client)
     this.draggable = new DraggableCanvasStage(this._stage)
   }
 
-  static create(stage: Container) {
+  static create(stage: Container, client: WsClient) {
     console.log(`Creating CanvasStage component ${CANVAS_STAGE_UUID}.`)
 
     stage.interactive = true
@@ -26,7 +27,7 @@ export class CanvasStage {
       }
     }
 
-    return new CanvasStage(stage)
+    return new CanvasStage(stage, client)
   }
 
   render() {

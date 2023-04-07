@@ -7,8 +7,9 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "@pixi/filter-color-overlay": "^5.0.0",
     "@shared/domain": "*",
+    "@shared/immutable-domain": "*",
+    "@pixi/filter-color-overlay": "^5.0.0",
     "@textea/json-viewer": "^2.12.4",
     "@types/uuid": "^9.0.0",
     "pixi.js": "^7.0.4",

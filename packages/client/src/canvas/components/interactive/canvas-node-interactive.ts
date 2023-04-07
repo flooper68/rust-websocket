@@ -1,7 +1,4 @@
-import { AddNodeToSelection, SelectNode } from '@shared/domain'
 import { DisplayObject } from 'pixi.js'
-import { v4 } from 'uuid'
-import { CLIENT_UUID, dispatch } from '../../../ws/use-ws'
 import { CanvasComponent, InteractiveComponent } from '../../core/core-types'
 
 export class CanvasNodeInteractive implements InteractiveComponent {
@@ -35,29 +32,9 @@ export class CanvasNodeInteractive implements InteractiveComponent {
 
   onClick(shiftKey: boolean) {
     if (shiftKey) {
-      dispatch(
-        new AddNodeToSelection(
-          {
-            uuid: this._canvasComponent.uuid,
-            clientUuid: CLIENT_UUID
-          },
-          {
-            correlationUuid: v4()
-          }
-        )
-      )
+      console.warn(`Not implemented yet`)
     } else {
-      dispatch(
-        new SelectNode(
-          {
-            uuid: this._canvasComponent.uuid,
-            clientUuid: CLIENT_UUID
-          },
-          {
-            correlationUuid: v4()
-          }
-        )
-      )
+      console.warn(`Not implemented yet`)
     }
   }
 }

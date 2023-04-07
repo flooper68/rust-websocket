@@ -1,4 +1,4 @@
-import { ClientUuid } from './types'
+import { ClientUuid } from './types.js'
 
 export enum SessionErrorType {
   ClientAlreadyExists = 'ClientAlreadyExists',

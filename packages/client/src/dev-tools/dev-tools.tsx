@@ -1,29 +1,33 @@
-import { DomainEvent, DomainEventType } from '@shared/domain'
 import { useEffect, useState } from 'react'
 import { JsonViewer } from '@textea/json-viewer'
 import { BsBug } from 'react-icons/bs'
-import { $domainStream } from '../ws/use-ws'
+import {
+  DocumentSessionEvent,
+  SessionEventType
+} from '@shared/immutable-domain'
+import { WsClient } from '../client/ws-client'
 
 export const COLLECT_DATA = true
 
-export function DevTools(props: { open: boolean; onClose: () => void }) {
-  const { open, onClose } = props
+export function DevTools(props: {
+  open: boolean
+  onClose: () => void
+  client: WsClient
+}) {
+  const { open, onClose, client } = props
 
-  const [events, setEvents] = useState<DomainEvent[]>([])
+  const [events, setEvents] = useState<DocumentSessionEvent[]>([])
 
   useEffect(() => {
     if (!COLLECT_DATA) {
       return
     }
-
-    const subscription = $domainStream.subscribe((event) => {
-      if (event.type == DomainEventType.ClientCursorMoved) {
+    const subscription = client.domainStream$.subscribe((event) => {
+      if (event.type == SessionEventType.ClientCursorMoved) {
         return
       }
-
       setEvents((events) => [event, ...events].slice(0, 1000))
     })
-
     return () => subscription.unsubscribe()
   })
 

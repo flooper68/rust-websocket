@@ -1,12 +1,13 @@
-import { DomainSelectors, NodeKind, Uuid } from '@shared/domain'
+import { NodeKind, NodeStatus } from '@shared/immutable-domain'
 import { Container, Graphics } from 'pixi.js'
-import { getSessionState } from '../../ws/use-ws'
+import { WsClient } from '../../client/ws-client'
+
 import { DraggableSceneNode } from './draggable/draggable-scene-node'
 import { CanvasNodeInteractive } from './interactive/canvas-node-interactive'
 import { parseHexColor } from './parse-hex-color'
 
-function getRectangleOrFail(uuid: Uuid) {
-  const node = DomainSelectors.getNode(uuid, getSessionState())
+function getRectangleOrFail(uuid: string, client: WsClient) {
+  const node = client.getState().document.nodes[uuid]
 
   if (!node) {
     throw new Error(
@@ -28,14 +29,15 @@ export class CanvasRectangle {
   readonly interactive: CanvasNodeInteractive
 
   private constructor(
-    public readonly uuid: Uuid,
-    private readonly graphics: Graphics
+    public readonly uuid: string,
+    private readonly _graphics: Graphics,
+    private readonly _client: WsClient
   ) {
-    this.interactive = new CanvasNodeInteractive(graphics, this)
+    this.interactive = new CanvasNodeInteractive(_graphics, this)
     this.draggable = new DraggableSceneNode(this.uuid)
   }
 
-  static create(uuid: Uuid, stage: Container) {
+  static create(uuid: string, stage: Container, client: WsClient) {
     console.log(`Creating CanvasRectangle component ${uuid}.`)
 
     const rectangle = new Graphics()
@@ -48,29 +50,29 @@ export class CanvasRectangle {
 
     stage.addChild(rectangle)
 
-    const component = new CanvasRectangle(uuid, rectangle)
+    const component = new CanvasRectangle(uuid, rectangle, client)
     component.render()
 
     return component
   }
 
   render() {
-    const rectangle = getRectangleOrFail(this.uuid)
+    const rectangle = getRectangleOrFail(this.uuid, this._client)
 
     console.log(`Rendering CanvasRectangle ${this.uuid}.`, rectangle)
 
-    if (rectangle.deleted) {
-      this.graphics.visible = false
+    if (rectangle.status == NodeStatus.Deleted) {
+      this._graphics.visible = false
       return
     }
 
-    const color = parseHexColor(rectangle.rectangleMetadata.fill)
+    const color = parseHexColor(rectangle.fill)
 
-    this.graphics.visible = true
-    this.graphics.tint = color
-    this.graphics.width = rectangle.dimensions.width
-    this.graphics.height = rectangle.dimensions.height
-    this.graphics.position.x = rectangle.position.left
-    this.graphics.position.y = rectangle.position.top
+    this._graphics.visible = true
+    this._graphics.tint = color
+    this._graphics.width = rectangle.width
+    this._graphics.height = rectangle.height
+    this._graphics.position.x = rectangle.left
+    this._graphics.position.y = rectangle.top
   }
 }

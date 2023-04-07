@@ -1,4 +1,7 @@
-import { DomainState, DomainSelectors } from '@shared/domain'
+import {
+  DocumentSessionState,
+  SessionSelectors
+} from '@shared/immutable-domain'
 
 export interface BoundingBoxRectangle {
   left: number
@@ -8,11 +11,14 @@ export interface BoundingBoxRectangle {
   color: string
 }
 
-function getBoundingBoxes(state: DomainState) {
-  const clients = DomainSelectors.getConnectedClients(state)
+function getBoundingBoxes(state: DocumentSessionState) {
+  const clients = Object.values(state.session.clients)
 
   return clients.map((client) => {
-    const selectedNodes = DomainSelectors.getActiveSelection(client.uuid, state)
+    const selectedNodes = SessionSelectors.getClientActiveSelection(
+      client.uuid,
+      state
+    )
 
     if (selectedNodes.length === 0) {
       return {
@@ -21,28 +27,19 @@ function getBoundingBoxes(state: DomainState) {
       } as const
     }
 
-    const left =
-      Math.min(...selectedNodes.map((node) => node.position.left)) - 2
-    const top = Math.min(...selectedNodes.map((node) => node.position.top)) - 2
+    const left = Math.min(...selectedNodes.map((node) => node.left)) - 2
+    const top = Math.min(...selectedNodes.map((node) => node.top)) - 2
     const right =
-      Math.max(
-        ...selectedNodes.map(
-          (node) => node.position.left + node.dimensions.width
-        )
-      ) + 2
+      Math.max(...selectedNodes.map((node) => node.left + node.width)) + 2
     const bottom =
-      Math.max(
-        ...selectedNodes.map(
-          (node) => node.position.top + node.dimensions.height
-        )
-      ) + 2
+      Math.max(...selectedNodes.map((node) => node.top + node.height)) + 2
 
     return {
       left,
       top,
       width: right - left,
       height: bottom - top,
-      color: client.color,
+      color: '#ffffff',
       clientUuid: client.uuid,
       draw: true
     } as const
@@ -51,27 +48,28 @@ function getBoundingBoxes(state: DomainState) {
 
 function getClientBoundingBox(
   clientUuid: string,
-  state: DomainState
+  state: DocumentSessionState
 ): BoundingBoxRectangle | null {
-  const client = DomainSelectors.getClient(clientUuid, state)
+  const client = state.session.clients[clientUuid]
 
   if (client == null) {
     return null
   }
 
-  const selectedNodes = DomainSelectors.getActiveSelection(client.uuid, state)
+  const selectedNodes = SessionSelectors.getClientActiveSelection(
+    client.uuid,
+    state
+  )
 
   if (selectedNodes.length === 0) {
     return null
   }
 
-  const left = Math.min(...selectedNodes.map((node) => node.position.left))
-  const top = Math.min(...selectedNodes.map((node) => node.position.top))
-  const right = Math.max(
-    ...selectedNodes.map((node) => node.position.left + node.dimensions.width)
-  )
+  const left = Math.min(...selectedNodes.map((node) => node.left))
+  const top = Math.min(...selectedNodes.map((node) => node.top))
+  const right = Math.max(...selectedNodes.map((node) => node.left + node.width))
   const bottom = Math.max(
-    ...selectedNodes.map((node) => node.position.top + node.dimensions.height)
+    ...selectedNodes.map((node) => node.top + node.height)
   )
 
   return {
@@ -79,7 +77,7 @@ function getClientBoundingBox(
     top,
     width: right - left,
     height: bottom - top,
-    color: client.color
+    color: '#ffffff'
   }
 }
 
