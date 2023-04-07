@@ -5,8 +5,7 @@
   "types": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc ",
-    "dev": "tsc --watch",
+    "build": "tsc",
     "test": "vitest"
   },
   "dependencies": {
