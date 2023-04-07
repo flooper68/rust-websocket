@@ -1,42 +1,29 @@
-import { DomainEvent, DomainEventType, Node, NodeKind } from '@shared/domain'
-import { useCallback, useState } from 'react'
+import {
+  DocumentSessionEvent,
+  Node,
+  NodeStatus,
+  SessionEventType,
+  SessionSelectors
+} from '@shared/immutable-domain'
+import { useCallback, useEffect, useState } from 'react'
 import { FaLock, FaTrashAlt, FaUnlock } from 'react-icons/fa'
+import { CLIENT_UUID, WsClient } from '../client/ws-client'
 
-export function NodeDetail() {
+export function NodeDetail(props: { client: WsClient }) {
+  const { client } = props
+
   const [assets, setAssets] = useState<Node[]>([])
 
-  const handleEvent = useCallback((event: DomainEvent) => {
+  const handleEvent = useCallback((event: DocumentSessionEvent) => {
     switch (event.type) {
-      case DomainEventType.RectangleCreated:
-      case DomainEventType.ImageCreated:
-      case DomainEventType.NodeDeleted:
-      case DomainEventType.NodeUnlocked:
-      case DomainEventType.NodeLocked:
-      case DomainEventType.NodeSelected:
-      case DomainEventType.NodeDeselected:
-      case DomainEventType.RectangleFillSet: {
-        // setAssets(
-        //   DomainSelectors.getActiveSelection(CLIENT_UUID, getSessionState())
-        // )
+      case SessionEventType.NodesSelected: {
+        setAssets(
+          SessionSelectors.getClientActiveSelection(
+            CLIENT_UUID,
+            client.getState()
+          )
+        )
         break
-      }
-      case DomainEventType.ClientCommandAddedToHistory:
-      case DomainEventType.LastClientCommandRedone:
-      case DomainEventType.LastClientCommandRedoSkipped:
-      case DomainEventType.LastClientCommandUndone:
-      case DomainEventType.LastClientCommandUndoSkipped:
-      case DomainEventType.ClientConnected:
-      case DomainEventType.ClientDisconnected:
-      case DomainEventType.NodeMoved:
-      case DomainEventType.NodePositionSet:
-      case DomainEventType.PositionDraggingStarted:
-      case DomainEventType.NodeRestored:
-      case DomainEventType.ClientCursorMoved: {
-        break
-      }
-      default: {
-        const check: never = event
-        throw new Error('Unhandled event: ' + check)
       }
     }
   }, [])
@@ -57,13 +44,13 @@ export function NodeDetail() {
     console.warn(`Not implemented`)
   }, [])
 
-  // useEffect(() => {
-  //   const sub = $domainStream.subscribe(handleEvent)
+  useEffect(() => {
+    const sub = client.domainStream$.subscribe(handleEvent)
 
-  //   return () => {
-  //     sub.unsubscribe()
-  //   }
-  // }, [])
+    return () => {
+      sub.unsubscribe()
+    }
+  }, [])
 
   if (assets.length === 0) return null
 
@@ -75,7 +62,11 @@ export function NodeDetail() {
           <button
             className="icon-btn outlined"
             onClick={lockNodes}
-            data-toggled={assets.some((node) => node.locked) ? 'true' : 'false'}
+            data-toggled={
+              assets.some((node) => node.status === NodeStatus.Locked)
+                ? 'true'
+                : 'false'
+            }
           >
             <FaLock />
           </button>
@@ -83,20 +74,22 @@ export function NodeDetail() {
             className="icon-btn outlined"
             onClick={unlockNodes}
             data-toggled={
-              assets.some((node) => !node.locked) ? 'true' : 'false'
+              assets.some((node) => node.status !== NodeStatus.Locked)
+                ? 'true'
+                : 'false'
             }
           >
             <FaUnlock />
           </button>
           <button
             className="icon-btn outlined"
-            disabled={assets.some((asset) => asset.locked)}
+            disabled={assets.some((node) => node.status === NodeStatus.Locked)}
           >
             <FaTrashAlt onClick={deleteNodes} />
           </button>
         </div>
       </div>
-      {assets.every((node) => node.kind === NodeKind.Rectangle) && (
+      {/* {assets.every((node) => node.kind === NodeKind.Rectangle) && (
         <div>
           <h3>Rectangle</h3>
           <div className="control-row">
@@ -123,7 +116,7 @@ export function NodeDetail() {
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

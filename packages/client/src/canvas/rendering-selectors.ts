@@ -39,7 +39,7 @@ function getBoundingBoxes(state: DocumentSessionState) {
       top,
       width: right - left,
       height: bottom - top,
-      color: '#ffffff',
+      color: client.color,
       clientUuid: client.uuid,
       draw: true
     } as const
@@ -77,7 +77,7 @@ function getClientBoundingBox(
     top,
     width: right - left,
     height: bottom - top,
-    color: '#ffffff'
+    color: client.color
   }
 }
 

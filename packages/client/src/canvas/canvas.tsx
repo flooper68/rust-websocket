@@ -202,11 +202,11 @@ export function Canvas(props: { client: WsClient }) {
           app.renderClientBoundingBox(event.payload.uuid)
           break
         }
-        //   case DomainEventType.NodeDeselected:
-        //   case DomainEventType.NodeSelected: {
-        //     app.renderClientBoundingBox(event.payload.clientUuid)
-        //     break
-        //   }
+        // case DomainEventType.NodeDeselected:
+        case SessionEventType.NodesSelected: {
+          app.renderClientBoundingBox(event.payload.clientUuid)
+          break
+        }
         //   case DomainEventType.NodeDeleted:
         //   case DomainEventType.NodePositionSet:
         //   case DomainEventType.NodeMoved: {

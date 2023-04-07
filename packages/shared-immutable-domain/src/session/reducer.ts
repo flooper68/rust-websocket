@@ -90,7 +90,7 @@ function reduceNodesSelected(
 
   const updatedClient = {
     ...client,
-    selectedNodes: event.payload.nodes
+    selection: event.payload.nodes
   }
 
   return {

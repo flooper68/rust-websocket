@@ -14,4 +14,9 @@ export {
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
 export { SessionEventType } from './session/types.js'
-export { NodeKind, NodeStatus, DocumentEventType } from './document/types.js'
+export {
+  NodeKind,
+  NodeStatus,
+  DocumentEventType,
+  type Node
+} from './document/types.js'
