@@ -4,7 +4,8 @@ import {
   isImage,
   isRectangle,
   isNodeLocked,
-  DocumentState
+  DocumentState,
+  isNodeDeleted
 } from './document/types.js'
 import { DocumentSessionState } from './document-session-root.js'
 import { ClientUuid, SessionState } from './session/types.js'
@@ -36,6 +37,15 @@ const getClientSelection = (
 
     return node
   })
+}
+
+const getClientNotDeletedSelection = (
+  clientUuid: ClientUuid,
+  state: DocumentSessionState
+) => {
+  return getClientSelection(clientUuid, state).filter(
+    (node) => !isNodeDeleted(node)
+  )
 }
 
 const getClientActiveSelection = (
@@ -94,6 +104,7 @@ export const SessionSelectors = {
   getConnectedClient,
   getNode,
   getClientSelection,
+  getClientNotDeletedSelection,
   getClientActiveSelection,
   getClientActiveImageSelection,
   getClientActiveRectangleSelection,

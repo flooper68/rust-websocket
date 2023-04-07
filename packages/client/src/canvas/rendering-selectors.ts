@@ -11,41 +11,6 @@ export interface BoundingBoxRectangle {
   color: string
 }
 
-function getBoundingBoxes(state: DocumentSessionState) {
-  const clients = Object.values(state.session.clients)
-
-  return clients.map((client) => {
-    const selectedNodes = SessionSelectors.getClientActiveSelection(
-      client.uuid,
-      state
-    )
-
-    if (selectedNodes.length === 0) {
-      return {
-        clientUuid: client.uuid,
-        draw: false
-      } as const
-    }
-
-    const left = Math.min(...selectedNodes.map((node) => node.left)) - 2
-    const top = Math.min(...selectedNodes.map((node) => node.top)) - 2
-    const right =
-      Math.max(...selectedNodes.map((node) => node.left + node.width)) + 2
-    const bottom =
-      Math.max(...selectedNodes.map((node) => node.top + node.height)) + 2
-
-    return {
-      left,
-      top,
-      width: right - left,
-      height: bottom - top,
-      color: client.color,
-      clientUuid: client.uuid,
-      draw: true
-    } as const
-  })
-}
-
 function getClientBoundingBox(
   clientUuid: string,
   state: DocumentSessionState
@@ -56,7 +21,7 @@ function getClientBoundingBox(
     return null
   }
 
-  const selectedNodes = SessionSelectors.getClientActiveSelection(
+  const selectedNodes = SessionSelectors.getClientNotDeletedSelection(
     client.uuid,
     state
   )
@@ -82,6 +47,5 @@ function getClientBoundingBox(
 }
 
 export const RenderingSelectors = {
-  getBoundingBoxes,
   getClientBoundingBox
 }

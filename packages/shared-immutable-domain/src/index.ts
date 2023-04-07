@@ -12,7 +12,11 @@ export {
   DisconnectClient,
   MoveClientCursor,
   SelectNodes,
-  AddNodeToSelection
+  AddNodeToSelection,
+  LockSelection,
+  UnlockSelection,
+  DeleteSelection,
+  SetRectangleSelectionFill
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
 export { SessionEventType } from './session/types.js'

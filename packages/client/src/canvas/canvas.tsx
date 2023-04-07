@@ -202,24 +202,23 @@ export function Canvas(props: { client: WsClient }) {
           app.renderClientBoundingBox(event.payload.uuid)
           break
         }
-        // case DomainEventType.NodeDeselected:
         case SessionEventType.NodesSelected: {
           app.renderClientBoundingBox(event.payload.clientUuid)
           break
         }
-        //   case DomainEventType.NodeDeleted:
-        //   case DomainEventType.NodePositionSet:
-        //   case DomainEventType.NodeMoved: {
-        //     app.renderClientBoundingBox(event.payload.clientUuid)
-        //     app.renderNode(event.payload.uuid)
-        //     break
+        case DocumentEventType.NodeDeleted:
+          //   case DomainEventType.NodePositionSet:
+          //   case DomainEventType.NodeMoved: {
+          //     app.renderClientBoundingBox(event.payload.clientUuid)
+          app.renderNode(event.payload)
+          break
         //   }
 
         //   case DomainEventType.NodeRestored:
-        //   case DomainEventType.RectangleFillSet: {
-        //     app.renderNode(event.payload.uuid)
-        //     break
-        //   }
+        case DocumentEventType.NodeFillSet: {
+          app.renderNode(event.payload.uuid)
+          break
+        }
         //   case DomainEventType.ClientCommandAddedToHistory:
         //   case DomainEventType.LastClientCommandRedone:
         //   case DomainEventType.LastClientCommandRedoSkipped:

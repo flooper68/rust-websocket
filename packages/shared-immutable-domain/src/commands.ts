@@ -242,9 +242,12 @@ function deleteSelection(command: DeleteSelection, context: CommandContext) {
     context.state
   )
 
-  const events = activeSelection.map((node) => {
-    return new NodeDeleted(node.uuid)
-  })
+  const events = [
+    ...activeSelection.map((node) => {
+      return new NodeDeleted(node.uuid)
+    }),
+    new NodesSelected({ clientUuid: command.payload.clientUuid, nodes: [] })
+  ]
 
   context.dispatch(events)
 }
@@ -437,7 +440,7 @@ function addNodeToSelection(
     throw new Error('Client not connected')
   }
 
-  const activeSelection = SessionSelectors.getClientActiveSelection(
+  const activeSelection = SessionSelectors.getClientNotDeletedSelection(
     command.payload.clientUuid,
     context.state
   )
@@ -464,5 +467,6 @@ export const DocumentSessionCommands = {
   moveClientCursor,
   createRectangle,
   createImage,
-  selectNodes,addNodeToSelection
+  selectNodes,
+  addNodeToSelection
 }
