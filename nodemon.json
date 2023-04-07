@@ -1,0 +1,6 @@
+{
+  "ignore": ["node_modules", "dist"],
+  "delay": 500,
+  "ext": "ts",
+  "exec": "nx run-many --target=build --exclude=@client/root && nx run @server/node:start"
+}

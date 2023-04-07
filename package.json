@@ -5,9 +5,11 @@
   ],
   "scripts": {
     "build": "npx nx run-many --target=\"build\"",
-    "test": "npx nx run-many --target=\"test\""
+    "test": "npx nx run-many --target=\"test\"",
+    "dev": "nodemon & nx run @client/root:dev"
   },
   "devDependencies": {
+    "nodemon": "^2.0.22",
     "nx": "^15.9.2",
     "prettier": "^2.8.1"
   }

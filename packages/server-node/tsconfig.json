@@ -9,7 +9,8 @@
     "noEmit": false,
     "rootDir": "src",
     "baseUrl": "src",
-    "incremental": true
+    "incremental": true,
+    "esModuleInterop": true
   },
   "include": ["src"]
 }
