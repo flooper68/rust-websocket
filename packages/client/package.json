@@ -7,7 +7,7 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "@shared/domain": "*",
+    "@shared/common": "*",
     "@shared/immutable-domain": "*",
     "@pixi/filter-color-overlay": "^5.0.0",
     "@textea/json-viewer": "^2.12.4",

@@ -5,8 +5,6 @@ import { parseHexColor } from './parse-hex-color'
 function getClientOrFail(uuid: string, wsClient: WsClient) {
   const client = wsClient.getState().session.clients[uuid]
 
-  console.log(client)
-
   if (!client) {
     throw new Error(
       `Can not render CanvasCursor, client ${uuid} does not exist!`
@@ -37,7 +35,7 @@ export class CanvasCursor {
     console.log(`Creating CanvasCursor component ${clientUuid}.`)
 
     const client = getClientOrFail(clientUuid, wsClient)
-    const color = parseHexColor('#FF0000')
+    const color = parseHexColor(client.color)
 
     var cursor = new Graphics()
     cursor.zIndex = 10010

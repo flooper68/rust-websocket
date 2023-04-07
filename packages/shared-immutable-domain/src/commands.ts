@@ -20,6 +20,7 @@ import {
 import { SessionSelectors } from './selectors.js'
 import { SessionFactories } from './session/factories.js'
 import {
+  ClientColor,
   ClientConnected,
   ClientCursorMoved,
   ClientDisconnected,
@@ -104,6 +105,7 @@ export class ConnectClient {
   constructor(
     public payload: {
       clientUuid: ClientUuid
+      color: ClientColor
     }
   ) {}
 }
@@ -284,7 +286,8 @@ function connectClient(command: ConnectClient, context: CommandContext) {
   }
 
   const newClient = SessionFactories.createConnectedClient({
-    uuid: command.payload.clientUuid
+    uuid: command.payload.clientUuid,
+    color: command.payload.color
   })
 
   const events = [new ClientConnected(newClient)]

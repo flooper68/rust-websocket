@@ -2,6 +2,8 @@ import { DocumentEvent, NodeUuid, PositionValue } from '../document/types.js'
 
 export type ClientUuid = string
 
+export type ClientColor = string
+
 export interface CommittedCommand {
   redoEvents: DocumentEvent[]
   undoEvents: DocumentEvent[]
@@ -9,6 +11,7 @@ export interface CommittedCommand {
 
 export interface ConnectedClient {
   uuid: ClientUuid
+  color: ClientColor
   cursor: {
     left: PositionValue
     top: PositionValue
