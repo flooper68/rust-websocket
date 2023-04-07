@@ -1,64 +1,61 @@
-import { v4 } from 'uuid'
 import {
-  buildDomain,
   DisconnectClient,
-  DomainCommandType,
-  createInitialState,
-  type DomainCommand,
-  type DomainEvent,
-  DomainEventType,
-  InitialStateSent
-} from '@shared/domain'
+  DocumentSessionCommand,
+  DocumentSessionCommandType,
+  DocumentSessionRoot,
+  SessionEventType,
+  DocumentSessionState
+} from '@shared/immutable-domain'
 import { Subject } from 'rxjs'
 import { WebSocketServer } from 'ws'
 
 const PORT = 6464
 
-const session = buildDomain()
-
-session.initialize({
-  connections: {},
-  nodes: createInitialState()
-})
+const documentSessionRoot = new DocumentSessionRoot()
 
 const wss = new WebSocketServer({
   port: PORT
 })
 
-const $commandStream = new Subject<DomainCommand>()
+const $commandStream = new Subject<DocumentSessionCommand>()
 
-$commandStream.subscribe((e) => setImmediate(() => session.dispatch(e)))
+$commandStream.subscribe((e) => {
+  setImmediate(() => {
+    console.log(`Dispatching command: ${e.type}.`)
+    documentSessionRoot.dispatch(e)
+  })
+})
 
-function createCommandMessage(command: DomainCommand) {
+console.log(`Domain listens to command stream.`)
+
+function createCommandMessage(command: DocumentSessionCommand) {
   return JSON.stringify({
     messageType: 'command',
     payload: command
   })
 }
 
-function createEventMessage(event: DomainEvent | InitialStateSent) {
+function createInitialStateMessage(event: DocumentSessionState) {
   return JSON.stringify({
-    messageType: 'event',
+    messageType: 'initialState',
     payload: event
   })
 }
 
 function parseCommandMessage(message: unknown) {
-  console.log(`Parsing message: ${message}.`)
   try {
     const parsed = JSON.parse(`${message}`) as {
       messageType: string
-      payload: DomainCommand
+      payload: DocumentSessionCommand
     }
     if (parsed.messageType === 'command') {
-      console.log(`Returning payload of command ${parsed.messageType}.`)
       return parsed.payload
     }
 
-    console.log(`Message ${parsed.messageType} is not a command.`)
+    console.warn(`Message ${parsed.messageType} is not a command.`)
     return null
   } catch (e) {
-    console.log(`Error parsing message: ${e}.`)
+    console.error(`Error parsing message: ${e}.`)
     return null
   }
 }
@@ -72,7 +69,7 @@ wss.on('connection', function connection(ws) {
 
   let clientUuid: string | null = null
 
-  ws.on('message', function message(data) {
+  ws.on('message', function message(data: string) {
     const command = parseCommandMessage(data)
 
     if (command == null) {
@@ -83,15 +80,13 @@ wss.on('connection', function connection(ws) {
 
     if (
       clientUuid == null &&
-      command.type === DomainCommandType.ConnectClient
+      command.type === DocumentSessionCommandType.ConnectClient
     ) {
-      console.log(`Setting client UUID to ${command.payload.uuid}.`)
-      clientUuid = command.payload.uuid
+      console.log(`Setting client UUID to ${command.payload.clientUuid}.`)
+      clientUuid = command.payload.clientUuid
     }
 
-    setTimeout(() => {
-      $commandStream.next(command)
-    }, 20)
+    $commandStream.next(command)
   })
 
   const commandSub = $commandStream.subscribe((command) => {
@@ -99,32 +94,21 @@ wss.on('connection', function connection(ws) {
     ws.send(createCommandMessage(command))
   })
 
-  const eventSub = session.$domainStream.subscribe((event) => {
+  const eventSub = documentSessionRoot.domainStream$.subscribe((event) => {
     console.log(`Emitting event: ${event.type} to client ${clientUuid}.`)
 
     if (
-      event.type === DomainEventType.ClientConnected &&
+      event.type === SessionEventType.ClientConnected &&
       clientUuid === event.payload.uuid
     ) {
       console.log(`Emitting initial state to client ${clientUuid}.`)
-      ws.send(
-        createEventMessage(new InitialStateSent(session.getSessionState()))
-      )
+      ws.send(createInitialStateMessage(documentSessionRoot.getState()))
     }
-
-    ws.send(createEventMessage(event))
   })
 
   ws.on('close', () => {
-    if (clientUuid) {
-      $commandStream.next(
-        new DisconnectClient(
-          { uuid: clientUuid },
-          {
-            correlationUuid: v4()
-          }
-        )
-      )
+    if (clientUuid != null) {
+      $commandStream.next(new DisconnectClient({ clientUuid }))
     }
 
     console.log(`Connection closed.`)
