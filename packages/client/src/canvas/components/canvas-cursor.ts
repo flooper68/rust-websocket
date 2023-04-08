@@ -88,10 +88,8 @@ export class CanvasCursor {
   }
 
   render() {
-    const client = getClientOrFail(
-      parseClientCursorUuid(this.uuid),
-      this._client
-    )
+    const client =
+      this._client.getState().session.clients[parseClientCursorUuid(this.uuid)]
 
     console.log(`Rendering CanvasCursor ${this.uuid}.`, client)
 

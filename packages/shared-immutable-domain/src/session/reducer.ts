@@ -1,5 +1,10 @@
 import { match } from 'ts-pattern'
-import { ClientAlreadyExists, ClientIsNotConnected } from './errors.js'
+import {
+  ClientAlreadyExists,
+  ClientIsAlreadyDragging,
+  ClientIsNotConnected,
+  ClientIsNotDragging
+} from './errors.js'
 import {
   ClientConnected,
   ClientDisconnected,
@@ -7,7 +12,10 @@ import {
   SessionEventType,
   SessionState,
   ClientCursorMoved,
-  NodesSelected
+  NodesSelected,
+  DraggingStarted,
+  DraggingFinished,
+  DraggingMoved
 } from './types.js'
 
 function reduceClientConnected(
@@ -102,6 +110,96 @@ function reduceNodesSelected(
   }
 }
 
+function reduceDraggingStarted(
+  event: DraggingStarted,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  if (client.dragging) {
+    throw new ClientIsAlreadyDragging(event.payload.clientUuid)
+  }
+
+  const updatedClient = {
+    ...client,
+    dragging: {
+      left: 0,
+      top: 0
+    }
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceDraggingMoved(
+  event: DraggingMoved,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  if (client.dragging == null) {
+    throw new ClientIsNotDragging(event.payload.clientUuid)
+  }
+
+  const updatedClient = {
+    ...client,
+    dragging: {
+      left: client.dragging.left + event.payload.diffLeft,
+      top: client.dragging.top + event.payload.diffTop
+    }
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceDraggingFinished(
+  event: DraggingFinished,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  if (client.dragging == null) {
+    throw new ClientIsNotDragging(event.payload.clientUuid)
+  }
+
+  const updatedClient = {
+    ...client,
+    dragging: null
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
 function reduce(event: SessionEvent, state: SessionState): SessionState {
   return match(event)
     .with(
@@ -127,6 +225,24 @@ function reduce(event: SessionEvent, state: SessionState): SessionState {
         type: SessionEventType.NodesSelected
       },
       (e) => reduceNodesSelected(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.DraggingStarted
+      },
+      (e) => reduceDraggingStarted(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.DraggingMoved
+      },
+      (e) => reduceDraggingMoved(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.DraggingFinished
+      },
+      (e) => reduceDraggingFinished(e, state)
     )
     .exhaustive()
 }

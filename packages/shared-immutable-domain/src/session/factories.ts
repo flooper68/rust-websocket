@@ -1,7 +1,7 @@
 import { ClientUuid, ConnectedClient, ClientColor } from './types.js'
 
 interface ConnectedClientFactoryProps {
-  uuid: ClientUuid,
+  uuid: ClientUuid
   color: ClientColor
 }
 
@@ -17,6 +17,7 @@ const createConnectedClient: ConnectedClientFactory = (props) => {
       left: 0,
       top: 0
     },
+    dragging: null,
     undoStack: [],
     redoStack: [],
     selection: []

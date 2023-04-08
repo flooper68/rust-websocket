@@ -100,9 +100,17 @@ const getClientLockedSelection = (
   return getClientSelection(clientUuid, state).filter(isNodeLocked)
 }
 
+const isClientSelectionLocked = (
+  clientUuid: ClientUuid,
+  state: DocumentSessionState
+) => {
+  return getClientSelection(clientUuid, state).some(isNodeLocked)
+}
+
 export const SessionSelectors = {
   getConnectedClient,
   getNode,
+  isClientSelectionLocked,
   getClientSelection,
   getClientNotDeletedSelection,
   getClientActiveSelection,

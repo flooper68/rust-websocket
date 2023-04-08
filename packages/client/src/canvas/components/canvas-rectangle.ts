@@ -34,7 +34,7 @@ export class CanvasRectangle {
     private readonly _client: WsClient
   ) {
     this.interactive = new CanvasNodeInteractive(_graphics, this, _client)
-    this.draggable = new DraggableSceneNode(this.uuid)
+    this.draggable = new DraggableSceneNode(this.uuid, _client)
   }
 
   static create(uuid: string, stage: Container, client: WsClient) {
@@ -59,6 +59,12 @@ export class CanvasRectangle {
   render() {
     const rectangle = getRectangleOrFail(this.uuid, this._client)
 
+    const client = Object.values(this._client.getState().session.clients).find(
+      (client) => client.selection.includes(this.uuid)
+    )
+
+    const draggingOffset = client?.dragging ?? { left: 0, top: 0 }
+
     console.log(`Rendering CanvasRectangle ${this.uuid}.`, rectangle)
 
     if (rectangle.status == NodeStatus.Deleted) {
@@ -72,7 +78,7 @@ export class CanvasRectangle {
     this._graphics.tint = color
     this._graphics.width = rectangle.width
     this._graphics.height = rectangle.height
-    this._graphics.position.x = rectangle.left
-    this._graphics.position.y = rectangle.top
+    this._graphics.position.x = rectangle.left + draggingOffset.left
+    this._graphics.position.y = rectangle.top + draggingOffset.top
   }
 }

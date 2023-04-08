@@ -16,7 +16,10 @@ export {
   LockSelection,
   UnlockSelection,
   DeleteSelection,
-  SetRectangleSelectionFill
+  SetRectangleSelectionFill,
+  StartDragging,
+  MoveDragging,
+  FinishDragging
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
 export { SessionEventType } from './session/types.js'

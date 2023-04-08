@@ -37,9 +37,11 @@ function getClientBoundingBox(
     ...selectedNodes.map((node) => node.top + node.height)
   )
 
+  const draggingOffset = client.dragging ?? { left: 0, top: 0 }
+
   return {
-    left,
-    top,
+    left: left + draggingOffset.left,
+    top: top + draggingOffset.top,
     width: right - left,
     height: bottom - top,
     color: client.color

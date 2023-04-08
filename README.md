@@ -2,20 +2,11 @@
 
 ## Next steps
 
-2. Polish the domain
-   - Refactor to more systems
-     - Per system events
-   - Refactor types to Opaque
-3. Polish the selectors
-   - Per system selectors
-   - Create selection projection using events for perf
-4. Improve zooming & panning
-5. Add selection by dragging
+- Add undo redo back in
+- Clean up old domains
+- Use exhaustive matching everywhere
+- Analyse next steps
 
---- v1
-
-6. Performance updates
-   - Add memoization
-   - Add render batching
-   - Make mutable changes
-   - Use solidjs
+- Goals
+  - Use different approaches of domain modelling to demonstrate the safety vs complexity of implementation
+  - Optimize performance and show different benchmarks

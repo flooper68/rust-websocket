@@ -25,6 +25,9 @@ import {
   ClientCursorMoved,
   ClientDisconnected,
   ClientUuid,
+  DraggingFinished,
+  DraggingMoved,
+  DraggingStarted,
   NodesSelected
 } from './session/types.js'
 
@@ -41,7 +44,10 @@ export enum DocumentSessionCommandType {
   CreateRectangle = 'CreateRectangle',
   CreateImage = 'CreateImage',
   SelectNodes = 'SelectNodes',
-  AddNodeToSelection = 'NodeAddedToSelection'
+  AddNodeToSelection = 'NodeAddedToSelection',
+  StartDragging = 'StartDragging',
+  FinishDragging = 'FinishDragging',
+  MoveDragging = 'MoveDragging'
 }
 
 export class LockSelection {
@@ -173,6 +179,35 @@ export class AddNodeToSelection {
   ) {}
 }
 
+export class StartDragging {
+  readonly type = DocumentSessionCommandType.StartDragging
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+    }
+  ) {}
+}
+
+export class FinishDragging {
+  readonly type = DocumentSessionCommandType.FinishDragging
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+    }
+  ) {}
+}
+
+export class MoveDragging {
+  readonly type = DocumentSessionCommandType.MoveDragging
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+      diffLeft: PositionValue
+      diffTop: PositionValue
+    }
+  ) {}
+}
+
 export type DocumentSessionCommand =
   | LockSelection
   | UnlockSelection
@@ -187,6 +222,9 @@ export type DocumentSessionCommand =
   | CreateRectangle
   | SelectNodes
   | AddNodeToSelection
+  | StartDragging
+  | FinishDragging
+  | MoveDragging
 
 interface CommandContext {
   state: DocumentSessionState
@@ -244,7 +282,7 @@ function deleteSelection(command: DeleteSelection, context: CommandContext) {
 
   const events = [
     ...activeSelection.map((node) => {
-      return new NodeDeleted(node.uuid)
+      return new NodeDeleted({ uuid: node.uuid })
     }),
     new NodesSelected({ clientUuid: command.payload.clientUuid, nodes: [] })
   ]
@@ -455,6 +493,77 @@ function addNodeToSelection(
   context.dispatch(events)
 }
 
+function startDragging(command: StartDragging, context: CommandContext) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const events = [
+    new DraggingStarted({
+      clientUuid: command.payload.clientUuid
+    })
+  ]
+
+  context.dispatch(events)
+}
+
+function finishDragging(command: FinishDragging, context: CommandContext) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const activeSelection = SessionSelectors.getClientActiveSelection(
+    command.payload.clientUuid,
+    context.state
+  )
+
+  const events = [
+    ...activeSelection.map((node) => {
+      return new NodeMoved({
+        uuid: node.uuid,
+        left: node.left + (client.dragging?.left ?? 0),
+        top: node.top + (client.dragging?.top ?? 0)
+      })
+    }),
+    new DraggingFinished({
+      clientUuid: command.payload.clientUuid
+    })
+  ]
+
+  context.dispatch(events)
+}
+
+function moveDragging(command: MoveDragging, context: CommandContext) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const events = [
+    new DraggingMoved({
+      clientUuid: command.payload.clientUuid,
+      diffLeft: command.payload.diffLeft,
+      diffTop: command.payload.diffTop
+    })
+  ]
+
+  context.dispatch(events)
+}
+
 export const DocumentSessionCommands = {
   lockSelection,
   unlockSelection,
@@ -468,5 +577,8 @@ export const DocumentSessionCommands = {
   createRectangle,
   createImage,
   selectNodes,
-  addNodeToSelection
+  addNodeToSelection,
+  startDragging,
+  finishDragging,
+  moveDragging
 }

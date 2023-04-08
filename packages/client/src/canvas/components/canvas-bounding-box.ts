@@ -25,7 +25,10 @@ export class CanvasBoundingBox {
     private readonly _client: WsClient
   ) {
     this.interactive = new BoundingBoxInteractive(this._graphics)
-    this.draggable = new DraggableBoundingBox(parseClientUuidUuid(this.uuid))
+    this.draggable = new DraggableBoundingBox(
+      parseClientUuidUuid(this.uuid),
+      _client
+    )
   }
 
   static create(clientUuid: string, stage: Container, client: WsClient) {

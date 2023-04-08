@@ -118,7 +118,7 @@ export class ImageCreated {
 
 export class NodeDeleted {
   readonly type = DocumentEventType.NodeDeleted
-  constructor(readonly payload: NodeUuid) {}
+  constructor(readonly payload: { uuid: NodeUuid }) {}
 }
 
 export class NodeLocked {

@@ -165,6 +165,24 @@ export class DocumentSessionRoot {
         },
         (c) => DocumentSessionCommands.addNodeToSelection(c, context)
       )
+      .with(
+        {
+          type: DocumentSessionCommandType.StartDragging
+        },
+        (c) => DocumentSessionCommands.startDragging(c, context)
+      )
+      .with(
+        {
+          type: DocumentSessionCommandType.FinishDragging
+        },
+        (c) => DocumentSessionCommands.finishDragging(c, context)
+      )
+      .with(
+        {
+          type: DocumentSessionCommandType.MoveDragging
+        },
+        (c) => DocumentSessionCommands.moveDragging(c, context)
+      )
       .exhaustive()
   }
 }

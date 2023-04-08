@@ -202,17 +202,26 @@ export function Canvas(props: { client: WsClient }) {
           app.renderClientBoundingBox(event.payload.uuid)
           break
         }
+        case SessionEventType.DraggingFinished:
+        case SessionEventType.DraggingStarted:
+        case SessionEventType.DraggingMoved:
         case SessionEventType.NodesSelected: {
           app.renderClientBoundingBox(event.payload.clientUuid)
+
+          const connectedClient =
+            client.getState().session.clients[event.payload.clientUuid]
+          const selectedNodes = connectedClient.selection
+
+          selectedNodes.forEach((nodeUuid) => {
+            app.renderNode(nodeUuid)
+          })
           break
         }
         case DocumentEventType.NodeDeleted:
-          //   case DomainEventType.NodePositionSet:
-          //   case DomainEventType.NodeMoved: {
-          //     app.renderClientBoundingBox(event.payload.clientUuid)
-          app.renderNode(event.payload)
+        case DocumentEventType.NodeMoved: {
+          app.renderNode(event.payload.uuid)
           break
-        //   }
+        }
 
         //   case DomainEventType.NodeRestored:
         case DocumentEventType.NodeFillSet: {

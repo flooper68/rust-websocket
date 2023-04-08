@@ -66,14 +66,14 @@ function reduceNodeDeleted(
   event: NodeDeleted,
   state: DocumentState
 ): DocumentState {
-  const node = state.nodes[event.payload]
+  const node = state.nodes[event.payload.uuid]
 
   if (node == null) {
-    throw new NodeDoesNotExist(event.payload)
+    throw new NodeDoesNotExist(event.payload.uuid)
   }
 
   if (node.status === NodeStatus.Deleted) {
-    throw new NodeIsAlreadyDeleted(event.payload)
+    throw new NodeIsAlreadyDeleted(event.payload.uuid)
   }
 
   const updatedNode = {

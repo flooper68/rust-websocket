@@ -19,13 +19,20 @@ export interface ConnectedClient {
   undoStack: CommittedCommand[]
   redoStack: CommittedCommand[]
   selection: NodeUuid[]
+  dragging: {
+    left: PositionValue
+    top: PositionValue
+  } | null
 }
 
 export enum SessionEventType {
   ClientConnected = 'ClientConnected',
   ClientDisconnected = 'ClientDisconnected',
   ClientCursorMoved = 'ClientCursorMoved',
-  NodesSelected = 'NodeSelected'
+  NodesSelected = 'NodeSelected',
+  DraggingStarted = 'DraggingStarted',
+  DraggingMoved = 'DraggingMoved',
+  DraggingFinished = 'DraggingStopped'
 }
 
 export class ClientConnected {
@@ -56,11 +63,35 @@ export class NodesSelected {
   ) {}
 }
 
+export class DraggingStarted {
+  readonly type = SessionEventType.DraggingStarted
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
+export class DraggingMoved {
+  readonly type = SessionEventType.DraggingMoved
+  constructor(
+    public readonly payload: {
+      clientUuid: ClientUuid
+      diffLeft: PositionValue
+      diffTop: PositionValue
+    }
+  ) {}
+}
+
+export class DraggingFinished {
+  readonly type = SessionEventType.DraggingFinished
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
 export type SessionEvent =
   | ClientConnected
   | ClientDisconnected
   | ClientCursorMoved
   | NodesSelected
+  | DraggingStarted
+  | DraggingMoved
+  | DraggingFinished
 
 export interface SessionState {
   clients: Record<ClientUuid, ConnectedClient>
