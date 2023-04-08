@@ -7,8 +7,8 @@ export type ClientColor = string
 export type ClientName = string
 
 export interface CommittedCommand {
-  redoEvents: DocumentEvent[]
-  undoEvents: DocumentEvent[]
+  redoEvents: DocumentSessionEvent[]
+  undoEvents: DocumentSessionEvent[]
 }
 
 export interface ConnectedClient {
@@ -35,7 +35,10 @@ export enum SessionEventType {
   NodesSelected = 'NodeSelected',
   DraggingStarted = 'DraggingStarted',
   DraggingMoved = 'DraggingMoved',
-  DraggingFinished = 'DraggingStopped'
+  DraggingFinished = 'DraggingStopped',
+  ClientCommandAddedToHistory = 'ClientCommandAddedToHistory',
+  LastClientCommandUndone = 'LastClientCommandUndone',
+  LastClientCommandRedone = 'LastClientCommandRedone'
 }
 
 export class ClientConnected {
@@ -87,6 +90,26 @@ export class DraggingFinished {
   constructor(public readonly payload: { clientUuid: ClientUuid }) {}
 }
 
+export class ClientCommandAddedToHistory {
+  readonly type = SessionEventType.ClientCommandAddedToHistory
+  constructor(
+    public readonly payload: {
+      clientUuid: ClientUuid
+      command: CommittedCommand
+    }
+  ) {}
+}
+
+export class LastClientCommandUndone {
+  readonly type = SessionEventType.LastClientCommandUndone
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
+export class LastClientCommandRedone {
+  readonly type = SessionEventType.LastClientCommandRedone
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
 export type SessionEvent =
   | ClientConnected
   | ClientDisconnected
@@ -95,6 +118,11 @@ export type SessionEvent =
   | DraggingStarted
   | DraggingMoved
   | DraggingFinished
+  | ClientCommandAddedToHistory
+  | LastClientCommandUndone
+  | LastClientCommandRedone
+
+export type DocumentSessionEvent = SessionEvent | DocumentEvent
 
 export interface SessionState {
   clients: Record<ClientUuid, ConnectedClient>

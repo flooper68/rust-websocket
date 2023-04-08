@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "dev": "swc src --out-dir dist --config-file .swcrc --watch"
+    "dev": "swc src --out-dir dist --config-file .swcrc --watch",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "rxjs": "^7.8.0",

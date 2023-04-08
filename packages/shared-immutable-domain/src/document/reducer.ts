@@ -30,7 +30,7 @@ function reduceRectangleCreated(
 ): DocumentState {
   const node = state.nodes[event.payload.uuid]
 
-  if (node != null) {
+  if (node != null && node.status !== NodeStatus.Deleted) {
     throw new NodeAlreadyExist(event.payload.uuid)
   }
 
@@ -49,7 +49,7 @@ function reduceImageCreated(
 ): DocumentState {
   const node = state.nodes[event.payload.uuid]
 
-  if (node != null) {
+  if (node != null && node.status !== NodeStatus.Deleted) {
     throw new NodeAlreadyExist(event.payload.uuid)
   }
 

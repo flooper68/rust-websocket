@@ -217,31 +217,33 @@ export function Canvas(props: { client: WsClient }) {
           })
           break
         }
-        case DocumentEventType.NodeDeleted:
+        case DocumentEventType.NodeDeleted: {
+          const selection = Object.values(
+            client.getState().session.clients
+          ).find((c) => c.selection.includes(event.payload.uuid))
+
+          if (selection != null) {
+            app.renderClientBoundingBox(selection.uuid)
+          }
+          app.renderNode(event.payload.uuid)
+          break
+        }
+        case DocumentEventType.NodeFillSet:
+        case DocumentEventType.NodeUrlSet:
         case DocumentEventType.NodeMoved: {
           app.renderNode(event.payload.uuid)
           break
         }
-
-        //   case DomainEventType.NodeRestored:
-        case DocumentEventType.NodeFillSet: {
-          app.renderNode(event.payload.uuid)
+        case DocumentEventType.NodeLocked:
+        case DocumentEventType.NodeUnlocked:
+        case SessionEventType.ClientCommandAddedToHistory:
+        case SessionEventType.LastClientCommandRedone:
+        case SessionEventType.LastClientCommandUndone: {
           break
         }
-        //   case DomainEventType.ClientCommandAddedToHistory:
-        //   case DomainEventType.LastClientCommandRedone:
-        //   case DomainEventType.LastClientCommandRedoSkipped:
-        //   case DomainEventType.LastClientCommandUndone:
-        //   case DomainEventType.LastClientCommandUndoSkipped:
-        //   case DomainEventType.PositionDraggingStarted:
-        //   case DomainEventType.NodeLocked:
-        //   case DomainEventType.NodeUnlocked: {
-        //     break
-        //   }
         default: {
-          console.warn(`Unhandled event`, event)
-          // const check: never = event
-          // throw new Error(`Unhandled event ${check}.`)
+          const check: never = event
+          throw new Error(`Unhandled event ${check}.`)
         }
       }
       measure()

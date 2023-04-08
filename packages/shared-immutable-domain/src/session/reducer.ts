@@ -15,7 +15,11 @@ import {
   NodesSelected,
   DraggingStarted,
   DraggingFinished,
-  DraggingMoved
+  DraggingMoved,
+  ClientCommandAddedToHistory,
+  ConnectedClient,
+  LastClientCommandUndone,
+  LastClientCommandRedone
 } from './types.js'
 
 function reduceClientConnected(
@@ -200,6 +204,90 @@ function reduceDraggingFinished(
   }
 }
 
+function reduceClientCommandAddedToHistory(
+  event: ClientCommandAddedToHistory,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  const updatedClient: ConnectedClient = {
+    ...client,
+    undoStack: [...client.undoStack.slice(0, 1), event.payload.command]
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceLastClientCommandUndone(
+  event: LastClientCommandUndone,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+  const lastCommand = client.undoStack[client.undoStack.length - 1]
+
+  if (!lastCommand) {
+    throw new Error(`No command to undo!`)
+  }
+
+  const updatedClient: ConnectedClient = {
+    ...client,
+    undoStack: client.undoStack.slice(0, -1),
+    redoStack: [...client.redoStack, lastCommand]
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceLastClientCommandRedone(
+  event: LastClientCommandRedone,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+  const lastCommand = client.redoStack[client.redoStack.length - 1]
+
+  if (!lastCommand) {
+    throw new Error(`No command to redo!`)
+  }
+
+  const updatedClient: ConnectedClient = {
+    ...client,
+    redoStack: client.redoStack.slice(0, -1),
+    undoStack: [...client.undoStack, lastCommand]
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
 function reduce(event: SessionEvent, state: SessionState): SessionState {
   return match(event)
     .with(
@@ -243,6 +331,24 @@ function reduce(event: SessionEvent, state: SessionState): SessionState {
         type: SessionEventType.DraggingFinished
       },
       (e) => reduceDraggingFinished(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.ClientCommandAddedToHistory
+      },
+      (e) => reduceClientCommandAddedToHistory(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.LastClientCommandUndone
+      },
+      (e) => reduceLastClientCommandUndone(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.LastClientCommandRedone
+      },
+      (e) => reduceLastClientCommandRedone(e, state)
     )
     .exhaustive()
 }

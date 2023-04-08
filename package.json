@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npx nx run-many --target=\"build\"",
     "test": "npx nx run-many --target=\"test\"",
-    "dev": "nodemon & nx run @client/root:dev"
+    "dev": "nodemon & nx run @client/root:dev",
+    "type-check": "npx nx run-many --target=\"type-check\""
   },
   "devDependencies": {
     "@swc/cli": "^0.1.62",

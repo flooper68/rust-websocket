@@ -12,9 +12,11 @@ import {
   DocumentState
 } from './document/types.js'
 import { SessionReducer } from './session/reducer.js'
-import { SessionEvent, SessionState } from './session/types.js'
-
-export type DocumentSessionEvent = SessionEvent | DocumentEvent
+import {
+  DocumentSessionEvent,
+  SessionEvent,
+  SessionState
+} from './session/types.js'
 
 export interface DocumentSessionState {
   session: SessionState
@@ -67,7 +69,7 @@ export class DocumentSessionRoot {
         this._domainSubject$.next(event)
       })
     } catch (e) {
-      console.log(
+      console.error(
         `There was an error reducing DomainRoot events: ${e}, rolling back changes.`
       )
 
@@ -182,6 +184,18 @@ export class DocumentSessionRoot {
           type: DocumentSessionCommandType.MoveDragging
         },
         (c) => DocumentSessionCommands.moveDragging(c, context)
+      )
+      .with(
+        {
+          type: DocumentSessionCommandType.UndoClientCommand
+        },
+        (c) => DocumentSessionCommands.undoClientCommand(c, context)
+      )
+      .with(
+        {
+          type: DocumentSessionCommandType.RedoClientCommand
+        },
+        (c) => DocumentSessionCommands.redoClientCommand(c, context)
       )
       .exhaustive()
   }

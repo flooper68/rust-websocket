@@ -1,7 +1,4 @@
-import {
-  DocumentSessionEvent,
-  DocumentSessionState
-} from './document-session-root.js'
+import { DocumentSessionState } from './document-session-root.js'
 import { NodeFactories } from './document/factories.js'
 import {
   Fill,
@@ -21,6 +18,7 @@ import { SessionSelectors } from './selectors.js'
 import { SessionFactories } from './session/factories.js'
 import {
   ClientColor,
+  ClientCommandAddedToHistory,
   ClientConnected,
   ClientCursorMoved,
   ClientDisconnected,
@@ -29,7 +27,10 @@ import {
   DraggingFinished,
   DraggingMoved,
   DraggingStarted,
-  NodesSelected
+  NodesSelected,
+  DocumentSessionEvent,
+  LastClientCommandUndone,
+  LastClientCommandRedone
 } from './session/types.js'
 
 export enum DocumentSessionCommandType {
@@ -48,7 +49,9 @@ export enum DocumentSessionCommandType {
   AddNodeToSelection = 'NodeAddedToSelection',
   StartDragging = 'StartDragging',
   FinishDragging = 'FinishDragging',
-  MoveDragging = 'MoveDragging'
+  MoveDragging = 'MoveDragging',
+  UndoClientCommand = 'UndoClientCommand',
+  RedoClientCommand = 'RedoClientCommand'
 }
 
 export class LockSelection {
@@ -210,6 +213,24 @@ export class MoveDragging {
   ) {}
 }
 
+export class UndoClientCommand {
+  readonly type = DocumentSessionCommandType.UndoClientCommand
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+    }
+  ) {}
+}
+
+export class RedoClientCommand {
+  readonly type = DocumentSessionCommandType.RedoClientCommand
+  constructor(
+    public payload: {
+      clientUuid: ClientUuid
+    }
+  ) {}
+}
+
 export type DocumentSessionCommand =
   | LockSelection
   | UnlockSelection
@@ -227,6 +248,8 @@ export type DocumentSessionCommand =
   | StartDragging
   | FinishDragging
   | MoveDragging
+  | UndoClientCommand
+  | RedoClientCommand
 
 interface CommandContext {
   state: DocumentSessionState
@@ -409,11 +432,24 @@ function createRectangle(command: CreateRectangle, context: CommandContext) {
     fill: command.payload.fill
   })
 
-  const events = [
+  const redoEvents = [
     new RectangleCreated(rectangle),
     new NodesSelected({
       clientUuid: command.payload.clientUuid,
       nodes: [rectangle.uuid]
+    })
+  ]
+
+  const undoEvents = [new NodeDeleted({ uuid: rectangle.uuid })]
+
+  const events = [
+    ...redoEvents,
+    new ClientCommandAddedToHistory({
+      clientUuid: command.payload.clientUuid,
+      command: {
+        undoEvents,
+        redoEvents
+      }
     })
   ]
 
@@ -567,6 +603,64 @@ function moveDragging(command: MoveDragging, context: CommandContext) {
   context.dispatch(events)
 }
 
+function undoClientCommand(
+  command: UndoClientCommand,
+  context: CommandContext
+) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const lastCommand = client.undoStack[client.undoStack.length - 1]
+
+  if (lastCommand == null) {
+    throw new Error('No command to undo')
+  }
+
+  const events = [
+    ...lastCommand.undoEvents,
+    new LastClientCommandUndone({
+      clientUuid: command.payload.clientUuid
+    })
+  ]
+
+  context.dispatch(events)
+}
+
+function redoClientCommand(
+  command: RedoClientCommand,
+  context: CommandContext
+) {
+  const client = SessionSelectors.getConnectedClient(
+    command.payload.clientUuid,
+    context.state.session
+  )
+
+  if (client == null) {
+    throw new Error('Client not connected')
+  }
+
+  const lastCommand = client.redoStack[client.redoStack.length - 1]
+
+  if (lastCommand == null) {
+    throw new Error('No command to redo')
+  }
+
+  const events = [
+    ...lastCommand.redoEvents,
+    new LastClientCommandRedone({
+      clientUuid: command.payload.clientUuid
+    })
+  ]
+
+  context.dispatch(events)
+}
+
 export const DocumentSessionCommands = {
   lockSelection,
   unlockSelection,
@@ -583,5 +677,7 @@ export const DocumentSessionCommands = {
   addNodeToSelection,
   startDragging,
   finishDragging,
-  moveDragging
+  moveDragging,
+  undoClientCommand,
+  redoClientCommand
 }

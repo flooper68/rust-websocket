@@ -1,7 +1,6 @@
 export {
   DocumentSessionRoot,
-  type DocumentSessionState,
-  type DocumentSessionEvent
+  type DocumentSessionState
 } from './document-session-root.js'
 export {
   type DocumentSessionCommand,
@@ -19,10 +18,10 @@ export {
   SetRectangleSelectionFill,
   StartDragging,
   MoveDragging,
-  FinishDragging
+  FinishDragging,UndoClientCommand, RedoClientCommand
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
-export { SessionEventType } from './session/types.js'
+export { SessionEventType, type DocumentSessionEvent } from './session/types.js'
 export {
   NodeKind,
   NodeStatus,
