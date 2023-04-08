@@ -55,7 +55,7 @@ export class CanvasCursor {
       fontSize: 12,
       fill: 0xffffff
     })
-    const text = new Text('client.name', style)
+    const text = new Text(client.name, style)
     text.zIndex = 10010
 
     var border = new Graphics()

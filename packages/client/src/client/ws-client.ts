@@ -1,4 +1,4 @@
-import { getRandomColor } from '@shared/common'
+import { getRandomColor, getRandomFunnyName } from '@shared/common'
 import {
   ConnectClient,
   DocumentSessionCommand,
@@ -65,7 +65,8 @@ export class WsClient {
 
       const connectClient = new ConnectClient({
         clientUuid: CLIENT_UUID,
-        color: getRandomColor()
+        color: getRandomColor(),
+        name: getRandomFunnyName()
       })
 
       this.dispatch(connectClient)

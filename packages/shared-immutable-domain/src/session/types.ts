@@ -4,6 +4,8 @@ export type ClientUuid = string
 
 export type ClientColor = string
 
+export type ClientName = string
+
 export interface CommittedCommand {
   redoEvents: DocumentEvent[]
   undoEvents: DocumentEvent[]
@@ -12,6 +14,7 @@ export interface CommittedCommand {
 export interface ConnectedClient {
   uuid: ClientUuid
   color: ClientColor
+  name: ClientName
   cursor: {
     left: PositionValue
     top: PositionValue

@@ -1,8 +1,14 @@
-import { ClientUuid, ConnectedClient, ClientColor } from './types.js'
+import {
+  ClientUuid,
+  ConnectedClient,
+  ClientColor,
+  ClientName
+} from './types.js'
 
 interface ConnectedClientFactoryProps {
   uuid: ClientUuid
   color: ClientColor
+  name: ClientName
 }
 
 export type ConnectedClientFactory = (
@@ -13,6 +19,7 @@ const createConnectedClient: ConnectedClientFactory = (props) => {
   return {
     uuid: props.uuid,
     color: props.color,
+    name: props.name,
     cursor: {
       left: 0,
       top: 0

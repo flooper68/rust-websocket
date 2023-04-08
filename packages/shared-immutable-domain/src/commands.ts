@@ -24,6 +24,7 @@ import {
   ClientConnected,
   ClientCursorMoved,
   ClientDisconnected,
+  ClientName,
   ClientUuid,
   DraggingFinished,
   DraggingMoved,
@@ -114,6 +115,7 @@ export class ConnectClient {
     public payload: {
       clientUuid: ClientUuid
       color: ClientColor
+      name: ClientName
     }
   ) {}
 }
@@ -353,7 +355,8 @@ function connectClient(command: ConnectClient, context: CommandContext) {
 
   const newClient = SessionFactories.createConnectedClient({
     uuid: command.payload.clientUuid,
-    color: command.payload.color
+    color: command.payload.color,
+    name: command.payload.name
   })
 
   const events = [new ClientConnected(newClient)]
