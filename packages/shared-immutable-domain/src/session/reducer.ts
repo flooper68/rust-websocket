@@ -216,7 +216,8 @@ function reduceClientCommandAddedToHistory(
 
   const updatedClient: ConnectedClient = {
     ...client,
-    undoStack: [...client.undoStack.slice(0, 1), event.payload.command]
+    undoStack: [...client.undoStack.slice(0, 1), event.payload.command],
+    redoStack: []
   }
 
   return {

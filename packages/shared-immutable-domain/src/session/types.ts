@@ -9,6 +9,7 @@ export type ClientName = string
 export interface CommittedCommand {
   redoEvents: DocumentSessionEvent[]
   undoEvents: DocumentSessionEvent[]
+  selection: NodeUuid[]
 }
 
 export interface ConnectedClient {

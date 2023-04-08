@@ -217,6 +217,7 @@ export function Canvas(props: { client: WsClient }) {
           })
           break
         }
+        case DocumentEventType.NodeMoved:
         case DocumentEventType.NodeDeleted: {
           const selection = Object.values(
             client.getState().session.clients
@@ -229,8 +230,7 @@ export function Canvas(props: { client: WsClient }) {
           break
         }
         case DocumentEventType.NodeFillSet:
-        case DocumentEventType.NodeUrlSet:
-        case DocumentEventType.NodeMoved: {
+        case DocumentEventType.NodeUrlSet: {
           app.renderNode(event.payload.uuid)
           break
         }
