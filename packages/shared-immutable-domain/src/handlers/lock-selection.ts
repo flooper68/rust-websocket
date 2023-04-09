@@ -1,6 +1,6 @@
-import { LockSelection, CommandContext } from '../commands'
-import { NodeLocked } from '../document/types'
-import { SessionSelectors } from '../selectors'
+import { LockSelection, CommandContext } from '../commands.js'
+import { NodeLocked } from '../document/types.js'
+import { SessionSelectors } from '../selectors.js'
 
 export function lockSelection(command: LockSelection, context: CommandContext) {
   const activeSelection = SessionSelectors.getClientActiveSelection(

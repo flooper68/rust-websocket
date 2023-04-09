@@ -1,6 +1,6 @@
-import { DisconnectClient, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { ClientDisconnected } from '../session/types'
+import { DisconnectClient, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { ClientDisconnected } from '../session/types.js'
 
 export function disconnectClient(
   command: DisconnectClient,

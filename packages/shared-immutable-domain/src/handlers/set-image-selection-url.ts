@@ -1,6 +1,6 @@
-import { SetImageSelectionUrl, CommandContext } from '../commands'
-import { NodeUrlSet } from '../document/types'
-import { SessionSelectors } from '../selectors'
+import { SetImageSelectionUrl, CommandContext } from '../commands.js'
+import { NodeUrlSet } from '../document/types.js'
+import { SessionSelectors } from '../selectors.js'
 
 export function setImageSelectionUrl(
   command: SetImageSelectionUrl,

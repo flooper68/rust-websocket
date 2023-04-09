@@ -1,6 +1,6 @@
-import { SetRectangleSelectionFill, CommandContext } from '../commands'
-import { NodeFillSet } from '../document/types'
-import { SessionSelectors } from '../selectors'
+import { SetRectangleSelectionFill, CommandContext } from '../commands.js'
+import { NodeFillSet } from '../document/types.js'
+import { SessionSelectors } from '../selectors.js'
 
 export function setRectangleSelectionFill(
   command: SetRectangleSelectionFill,

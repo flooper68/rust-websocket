@@ -1,7 +1,7 @@
-import { ConnectClient, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { SessionFactories } from '../session/factories'
-import { ClientConnected } from '../session/types'
+import { ConnectClient, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { SessionFactories } from '../session/factories.js'
+import { ClientConnected } from '../session/types.js'
 
 export function connectClient(command: ConnectClient, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(

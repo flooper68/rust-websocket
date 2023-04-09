@@ -1,6 +1,6 @@
-import { MoveClientCursor, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { ClientCursorMoved } from '../session/types'
+import { MoveClientCursor, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { ClientCursorMoved } from '../session/types.js'
 
 export function moveClientCursor(
   command: MoveClientCursor,

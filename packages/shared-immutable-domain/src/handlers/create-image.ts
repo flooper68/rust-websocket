@@ -1,8 +1,8 @@
-import { CreateImage, CommandContext } from '../commands'
-import { NodeFactories } from '../document/factories'
-import { ImageCreated } from '../document/types'
-import { SessionSelectors } from '../selectors'
-import { NodesSelected } from '../session/types'
+import { CreateImage, CommandContext } from '../commands.js'
+import { NodeFactories } from '../document/factories.js'
+import { ImageCreated } from '../document/types.js'
+import { SessionSelectors } from '../selectors.js'
+import { NodesSelected } from '../session/types.js'
 
 export function createImage(command: CreateImage, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(

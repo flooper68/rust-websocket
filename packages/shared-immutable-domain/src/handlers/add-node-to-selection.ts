@@ -1,6 +1,6 @@
-import { AddNodeToSelection, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { NodesSelected } from '../session/types'
+import { AddNodeToSelection, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { NodesSelected } from '../session/types.js'
 
 export function addNodeToSelection(
   command: AddNodeToSelection,

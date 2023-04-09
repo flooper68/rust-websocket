@@ -1,6 +1,6 @@
-import { UnlockSelection, CommandContext } from '../commands'
-import { NodeUnlocked } from '../document/types'
-import { SessionSelectors } from '../selectors'
+import { UnlockSelection, CommandContext } from '../commands.js'
+import { NodeUnlocked } from '../document/types.js'
+import { SessionSelectors } from '../selectors.js'
 
 export function unlockSelection(
   command: UnlockSelection,

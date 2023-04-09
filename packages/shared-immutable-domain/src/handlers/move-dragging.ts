@@ -1,6 +1,6 @@
-import { MoveDragging, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { DraggingMoved } from '../session/types'
+import { MoveDragging, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { DraggingMoved } from '../session/types.js'
 
 export function moveDragging(command: MoveDragging, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(

@@ -1,6 +1,6 @@
-import { SelectNodes, CommandContext } from '../commands'
-import { SessionSelectors } from '../selectors'
-import { NodesSelected } from '../session/types'
+import { SelectNodes, CommandContext } from '../commands.js'
+import { SessionSelectors } from '../selectors.js'
+import { NodesSelected } from '../session/types.js'
 
 export function selectNodes(command: SelectNodes, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
