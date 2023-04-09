@@ -3,8 +3,9 @@
 ## Next steps
 
 - Add undo redo back in
-  - All commands
   - Add command builder
+  - All commands
+- Improve and test sync race conditions
 - Clean up old domains
 - Use exhaustive matching everywhere
 - Write tests
