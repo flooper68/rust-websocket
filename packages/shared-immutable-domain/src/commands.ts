@@ -244,7 +244,7 @@ export type DocumentSessionCommand =
   | UndoClientCommand
   | RedoClientCommand
 
-interface CommandContext {
+export interface CommandContext {
   getState: () => DocumentSessionState
   dispatch: (event: DocumentSessionEvent[]) => void
 }
