@@ -1,6 +1,7 @@
 import { Observable, Subject } from 'rxjs'
 import { match } from 'ts-pattern'
 import {
+  Commands,
   DocumentSessionCommand,
   DocumentSessionCommands,
   DocumentSessionCommandType
@@ -108,13 +109,13 @@ export class DocumentSessionRoot {
         {
           type: DocumentSessionCommandType.CreateRectangle
         },
-        (c) => DocumentSessionCommands.createRectangle(c, context)
+        (c) => Commands.dispatch(c, context)
       )
       .with(
         {
           type: DocumentSessionCommandType.DeleteSelection
         },
-        (c) => DocumentSessionCommands.deleteSelection(c, context)
+        (c) => Commands.dispatch(c, context)
       )
       .with(
         {
@@ -174,7 +175,7 @@ export class DocumentSessionRoot {
         {
           type: DocumentSessionCommandType.FinishDragging
         },
-        (c) => DocumentSessionCommands.finishDragging(c, context)
+        (c) => Commands.dispatch(c, context)
       )
       .with(
         {
@@ -186,13 +187,13 @@ export class DocumentSessionRoot {
         {
           type: DocumentSessionCommandType.UndoClientCommand
         },
-        (c) => DocumentSessionCommands.undoClientCommand(c, context)
+        (c) => Commands.dispatch(c, context)
       )
       .with(
         {
           type: DocumentSessionCommandType.RedoClientCommand
         },
-        (c) => DocumentSessionCommands.redoClientCommand(c, context)
+        (c) => Commands.dispatch(c, context)
       )
       .exhaustive()
   }

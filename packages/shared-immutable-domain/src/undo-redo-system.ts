@@ -3,9 +3,9 @@ import {
   UndoClientCommand,
   CommandContext,
   DocumentSessionCommandType
-} from './commands'
-import { isNodeEvent } from './document/types'
-import { SessionSelectors } from './selectors'
+} from './commands.js'
+import { isNodeEvent } from './document/types.js'
+import { SessionSelectors } from './selectors.js'
 import {
   ClientCommandAddedToHistory,
   ClientUuid,
@@ -17,7 +17,7 @@ import {
   NodesEdited,
   NodesSelected,
   SessionEvent
-} from './session/types'
+} from './session/types.js'
 
 interface Command<T extends string> {
   type: T
@@ -288,29 +288,3 @@ export class UndoRedoBuilder<R extends Record<string, unknown> = {}> {
     return new UndoRedoSystem<R[keyof R]>(this._handlers)
   }
 }
-
-const test = new UndoRedoBuilder()
-  .command('normal', (c: { type: 'normal'; payload: { c: 'c' } }) => {
-    return { events: [] }
-  })
-  .undoableCommand(
-    'test1',
-    (_: { type: 'test1'; payload: { a: 'a'; clientUuid: ClientUuid } }) => {
-      return {
-        redoEvents: [],
-        undoEvents: [],
-        transientEvents: []
-      }
-    }
-  )
-  .undoableCommand(
-    'test2',
-    (_: { type: 'test2'; payload: { b: 'b'; clientUuid: ClientUuid } }) => {
-      return {
-        redoEvents: [],
-        undoEvents: [],
-        transientEvents: []
-      }
-    }
-  )
-  .build()

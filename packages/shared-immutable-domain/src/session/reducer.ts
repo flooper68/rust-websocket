@@ -232,9 +232,15 @@ function reduceClientCommandAddedToHistory(
     throw new ClientIsNotConnected(event.payload.clientUuid)
   }
 
+  const undoStack = [...client.undoStack, event.payload.command]
+
+  if (undoStack.length > 100) {
+    undoStack.shift()
+  }
+
   const updatedClient: ConnectedClient = {
     ...client,
-    undoStack: [...client.undoStack.slice(0, 1), event.payload.command],
+    undoStack,
     redoStack: []
   }
 
