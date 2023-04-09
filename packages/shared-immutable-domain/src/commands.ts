@@ -2,34 +2,35 @@ import { DocumentSessionState } from './document-session-root.js'
 import { NodeFactories } from './document/factories.js'
 import {
   Fill,
-  ImageCreated,
   ImageUrl,
   isNodeEvent,
   NodeDeleted,
-  NodeFillSet,
-  NodeLocked,
   NodeMoved,
   NodeRestored,
-  NodeUnlocked,
-  NodeUrlSet,
   NodeUuid,
   PositionValue,
   RectangleCreated
 } from './document/types.js'
+import { addNodeToSelection } from './handlers/add-node-to-selection.js'
+import { connectClient } from './handlers/connect-client.js'
+import { createImage } from './handlers/create-image.js'
+import { disconnectClient } from './handlers/disconnect-client.js'
+import { lockSelection } from './handlers/lock-selection.js'
+import { moveClientCursor } from './handlers/move-client-cursor.js'
+import { moveDragging } from './handlers/move-dragging.js'
+import { selectNodes } from './handlers/select-nodes.js'
+import { setImageSelectionUrl } from './handlers/set-image-selection-url.js'
+import { setRectangleSelectionFill } from './handlers/set-rectangle-selection-fill.js'
+import { startDragging } from './handlers/start-dragging.js'
+import { unlockSelection } from './handlers/unlock-selection.js'
 import { SessionSelectors } from './selectors.js'
-import { SessionFactories } from './session/factories.js'
 import {
   ClientColor,
   ClientCommandAddedToHistory,
-  ClientConnected,
-  ClientCursorMoved,
-  ClientDisconnected,
   ClientName,
   ClientUuid,
   DocumentSessionEvent,
   DraggingFinished,
-  DraggingMoved,
-  DraggingStarted,
   LastClientCommandRedone,
   LastClientCommandRedoSkipped,
   LastClientCommandUndone,
@@ -301,32 +302,6 @@ function buildUndoableCommand<
   }
 }
 
-function lockSelection(command: LockSelection, context: CommandContext) {
-  const activeSelection = SessionSelectors.getClientActiveSelection(
-    command.payload.clientUuid,
-    context.getState()
-  )
-
-  const events = activeSelection.map((node) => {
-    return new NodeLocked({ uuid: node.uuid })
-  })
-
-  context.dispatch(events)
-}
-
-function unlockSelection(command: UnlockSelection, context: CommandContext) {
-  const lockedSelection = SessionSelectors.getClientLockedSelection(
-    command.payload.clientUuid,
-    context.getState()
-  )
-
-  const events = lockedSelection.map((node) => {
-    return new NodeUnlocked({ uuid: node.uuid })
-  })
-
-  context.dispatch(events)
-}
-
 const deleteSelection = buildUndoableCommand(
   (command: DeleteSelection, context) => {
     const activeSelection = SessionSelectors.getClientActiveSelection(
@@ -359,108 +334,6 @@ const deleteSelection = buildUndoableCommand(
   }
 )
 
-function setRectangleSelectionFill(
-  command: SetRectangleSelectionFill,
-  context: CommandContext
-) {
-  if (
-    !SessionSelectors.isOnlyActiveRectangleSelection(
-      command.payload.clientUuid,
-      context.getState()
-    )
-  ) {
-    throw new Error('Only rectangles can be filled')
-  }
-
-  const activeRectangleSelection =
-    SessionSelectors.getClientActiveRectangleSelection(
-      command.payload.clientUuid,
-      context.getState()
-    )
-
-  const events = activeRectangleSelection.map((node) => {
-    return new NodeFillSet({ uuid: node.uuid, fill: command.payload.fill })
-  })
-
-  context.dispatch(events)
-}
-
-function setImageSelectionUrl(
-  command: SetImageSelectionUrl,
-  context: CommandContext
-) {
-  if (
-    !SessionSelectors.isOnlyActiveImageSelection(
-      command.payload.clientUuid,
-      context.getState()
-    )
-  ) {
-    throw new Error('Only images can have url set')
-  }
-
-  const activeImageSelection = SessionSelectors.getClientActiveImageSelection(
-    command.payload.clientUuid,
-    context.getState()
-  )
-
-  const events = activeImageSelection.map((node) => {
-    return new NodeUrlSet({ uuid: node.uuid, url: command.payload.url })
-  })
-
-  context.dispatch(events)
-}
-
-function connectClient(command: ConnectClient, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client != null) {
-    throw new Error('Client already connected')
-  }
-
-  const newClient = SessionFactories.createConnectedClient({
-    uuid: command.payload.clientUuid,
-    color: command.payload.color,
-    name: command.payload.name
-  })
-
-  const events = [new ClientConnected(newClient)]
-
-  context.dispatch(events)
-}
-
-function disconnectClient(command: DisconnectClient, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const events = [new ClientDisconnected(client)]
-
-  context.dispatch(events)
-}
-
-function moveClientCursor(command: MoveClientCursor, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const events = [new ClientCursorMoved(command.payload)]
-
-  context.dispatch(events)
-}
-
 const createRectangle = buildUndoableCommand((command: CreateRectangle) => {
   const rectangle = NodeFactories.createRectangle({
     uuid: command.payload.uuid,
@@ -483,101 +356,6 @@ const createRectangle = buildUndoableCommand((command: CreateRectangle) => {
     transientEvents: []
   }
 })
-
-function createImage(command: CreateImage, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const image = NodeFactories.createImage({
-    uuid: command.payload.uuid,
-    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/The_death.png/564px-The_death.png',
-    imageWidth: 100,
-    imageHeight: 100
-  })
-
-  const events = [
-    new ImageCreated(image),
-    new NodesSelected({
-      clientUuid: command.payload.clientUuid,
-      nodes: [image.uuid]
-    })
-  ]
-
-  context.dispatch(events)
-}
-
-function selectNodes(command: SelectNodes, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const events = [
-    new NodesSelected({
-      clientUuid: command.payload.clientUuid,
-      nodes: command.payload.nodes
-    })
-  ]
-
-  context.dispatch(events)
-}
-
-function addNodeToSelection(
-  command: AddNodeToSelection,
-  context: CommandContext
-) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const activeSelection = SessionSelectors.getClientNotDeletedSelection(
-    command.payload.clientUuid,
-    context.getState()
-  )
-
-  const events = [
-    new NodesSelected({
-      clientUuid: command.payload.clientUuid,
-      nodes: [...activeSelection.map((node) => node.uuid), command.payload.node]
-    })
-  ]
-
-  context.dispatch(events)
-}
-
-function startDragging(command: StartDragging, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const events = [
-    new DraggingStarted({
-      clientUuid: command.payload.clientUuid
-    })
-  ]
-
-  context.dispatch(events)
-}
 
 const finishDragging = buildUndoableCommand(
   (command: FinishDragging, context) => {
@@ -628,27 +406,6 @@ const finishDragging = buildUndoableCommand(
     }
   }
 )
-
-function moveDragging(command: MoveDragging, context: CommandContext) {
-  const client = SessionSelectors.getConnectedClient(
-    command.payload.clientUuid,
-    context.getState().session
-  )
-
-  if (client == null) {
-    throw new Error('Client not connected')
-  }
-
-  const events = [
-    new DraggingMoved({
-      clientUuid: command.payload.clientUuid,
-      diffLeft: command.payload.diffLeft,
-      diffTop: command.payload.diffTop
-    })
-  ]
-
-  context.dispatch(events)
-}
 
 function undoClientCommand(
   command: UndoClientCommand,
