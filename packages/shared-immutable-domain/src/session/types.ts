@@ -39,7 +39,10 @@ export enum SessionEventType {
   DraggingFinished = 'DraggingStopped',
   ClientCommandAddedToHistory = 'ClientCommandAddedToHistory',
   LastClientCommandUndone = 'LastClientCommandUndone',
-  LastClientCommandRedone = 'LastClientCommandRedone'
+  LastClientCommandUndoSkipped = 'LastClientCommandUndoSkipped',
+  LastClientCommandRedone = 'LastClientCommandRedone',
+  LastClientCommandRedoSkipped = 'LastClientCommandRedoSkipped',
+  NodesEdited = 'NodesEdited'
 }
 
 export class ClientConnected {
@@ -106,9 +109,29 @@ export class LastClientCommandUndone {
   constructor(public readonly payload: { clientUuid: ClientUuid }) {}
 }
 
+export class LastClientCommandUndoSkipped {
+  readonly type = SessionEventType.LastClientCommandUndoSkipped
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
 export class LastClientCommandRedone {
   readonly type = SessionEventType.LastClientCommandRedone
   constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
+export class LastClientCommandRedoSkipped {
+  readonly type = SessionEventType.LastClientCommandRedoSkipped
+  constructor(public readonly payload: { clientUuid: ClientUuid }) {}
+}
+
+export class NodesEdited {
+  readonly type = SessionEventType.NodesEdited
+  constructor(
+    public readonly payload: {
+      nodes: NodeUuid[]
+      clientUuid: ClientUuid
+    }
+  ) {}
 }
 
 export type SessionEvent =
@@ -122,9 +145,13 @@ export type SessionEvent =
   | ClientCommandAddedToHistory
   | LastClientCommandUndone
   | LastClientCommandRedone
+  | NodesEdited
+  | LastClientCommandUndoSkipped
+  | LastClientCommandRedoSkipped
 
 export type DocumentSessionEvent = SessionEvent | DocumentEvent
 
 export interface SessionState {
   clients: Record<ClientUuid, ConnectedClient>
+  nodeEditors: Record<NodeUuid, ClientUuid>
 }

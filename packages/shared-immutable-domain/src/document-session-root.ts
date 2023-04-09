@@ -35,7 +35,7 @@ export class DocumentSessionRoot {
       session: SessionState
       document: DocumentState
     } = {
-      session: { clients: {} },
+      session: { clients: {}, nodeEditors: {} },
       document: { nodes: {} }
     }
   ) {
@@ -84,7 +84,10 @@ export class DocumentSessionRoot {
 
   dispatch(command: DocumentSessionCommand) {
     const context = {
-      state: { session: this._sessionState, document: this._documentState },
+      getState: () => ({
+        session: this._sessionState,
+        document: this._documentState
+      }),
       dispatch: this._dispatchEvent
     }
 

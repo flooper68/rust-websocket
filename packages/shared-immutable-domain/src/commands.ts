@@ -29,7 +29,10 @@ import {
   DraggingMoved,
   DraggingStarted,
   LastClientCommandRedone,
+  LastClientCommandRedoSkipped,
   LastClientCommandUndone,
+  LastClientCommandUndoSkipped,
+  NodesEdited,
   NodesSelected
 } from './session/types.js'
 
@@ -252,14 +255,14 @@ export type DocumentSessionCommand =
   | RedoClientCommand
 
 interface CommandContext {
-  state: DocumentSessionState
+  getState: () => DocumentSessionState
   dispatch: (event: DocumentSessionEvent[]) => void
 }
 
 function lockSelection(command: LockSelection, context: CommandContext) {
   const activeSelection = SessionSelectors.getClientActiveSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = activeSelection.map((node) => {
@@ -272,7 +275,7 @@ function lockSelection(command: LockSelection, context: CommandContext) {
 function unlockSelection(command: UnlockSelection, context: CommandContext) {
   const lockedSelection = SessionSelectors.getClientLockedSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = lockedSelection.map((node) => {
@@ -285,7 +288,7 @@ function unlockSelection(command: UnlockSelection, context: CommandContext) {
 function moveSelection(command: MoveSelection, context: CommandContext) {
   const activeSelection = SessionSelectors.getClientActiveSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = activeSelection.map((node) => {
@@ -302,7 +305,7 @@ function moveSelection(command: MoveSelection, context: CommandContext) {
 function deleteSelection(command: DeleteSelection, context: CommandContext) {
   const activeSelection = SessionSelectors.getClientActiveSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = [
@@ -322,7 +325,7 @@ function setRectangleSelectionFill(
   if (
     !SessionSelectors.isOnlyActiveRectangleSelection(
       command.payload.clientUuid,
-      context.state
+      context.getState()
     )
   ) {
     throw new Error('Only rectangles can be filled')
@@ -331,7 +334,7 @@ function setRectangleSelectionFill(
   const activeRectangleSelection =
     SessionSelectors.getClientActiveRectangleSelection(
       command.payload.clientUuid,
-      context.state
+      context.getState()
     )
 
   const events = activeRectangleSelection.map((node) => {
@@ -348,7 +351,7 @@ function setImageSelectionUrl(
   if (
     !SessionSelectors.isOnlyActiveImageSelection(
       command.payload.clientUuid,
-      context.state
+      context.getState()
     )
   ) {
     throw new Error('Only images can have url set')
@@ -356,7 +359,7 @@ function setImageSelectionUrl(
 
   const activeImageSelection = SessionSelectors.getClientActiveImageSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = activeImageSelection.map((node) => {
@@ -369,7 +372,7 @@ function setImageSelectionUrl(
 function connectClient(command: ConnectClient, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client != null) {
@@ -390,7 +393,7 @@ function connectClient(command: ConnectClient, context: CommandContext) {
 function disconnectClient(command: DisconnectClient, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -405,7 +408,7 @@ function disconnectClient(command: DisconnectClient, context: CommandContext) {
 function moveClientCursor(command: MoveClientCursor, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -432,7 +435,7 @@ function buildUndoableCommand<
   return (command: C, context: CommandContext) => {
     const client = SessionSelectors.getConnectedClient(
       command.payload.clientUuid,
-      context.state.session
+      context.getState().session
     )
 
     if (client == null) {
@@ -444,20 +447,29 @@ function buildUndoableCommand<
       context
     )
 
-    const events = [
-      ...transientEvents,
-      ...redoEvents,
+    const events = [...transientEvents, ...redoEvents]
+
+    context.dispatch(events)
+
+    const updatedClient = SessionSelectors.getConnectedClient(
+      command.payload.clientUuid,
+      context.getState().session
+    )
+
+    if (updatedClient == null) {
+      throw new Error('Client not connected')
+    }
+
+    context.dispatch([
       new ClientCommandAddedToHistory({
         clientUuid: command.payload.clientUuid,
         command: {
           undoEvents,
           redoEvents,
-          selection: client.selection
+          selection: updatedClient.selection
         }
       })
-    ]
-
-    context.dispatch(events)
+    ])
   }
 }
 
@@ -487,7 +499,7 @@ const createRectangle = buildUndoableCommand((command: CreateRectangle) => {
 function createImage(command: CreateImage, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -515,7 +527,7 @@ function createImage(command: CreateImage, context: CommandContext) {
 function selectNodes(command: SelectNodes, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -538,7 +550,7 @@ function addNodeToSelection(
 ) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -547,7 +559,7 @@ function addNodeToSelection(
 
   const activeSelection = SessionSelectors.getClientNotDeletedSelection(
     command.payload.clientUuid,
-    context.state
+    context.getState()
   )
 
   const events = [
@@ -563,7 +575,7 @@ function addNodeToSelection(
 function startDragging(command: StartDragging, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -583,7 +595,7 @@ const finishDragging = buildUndoableCommand(
   (command: FinishDragging, context) => {
     const client = SessionSelectors.getConnectedClient(
       command.payload.clientUuid,
-      context.state.session
+      context.getState().session
     )
 
     if (client == null) {
@@ -592,7 +604,7 @@ const finishDragging = buildUndoableCommand(
 
     const activeSelection = SessionSelectors.getClientActiveSelection(
       command.payload.clientUuid,
-      context.state
+      context.getState()
     )
 
     const redoEvents = [
@@ -605,7 +617,13 @@ const finishDragging = buildUndoableCommand(
       })
     ]
 
+    const editedNodes = new NodesEdited({
+      clientUuid: command.payload.clientUuid,
+      nodes: activeSelection.map((node) => node.uuid)
+    })
+
     const transientEvents = [
+      editedNodes,
       new DraggingFinished({
         clientUuid: command.payload.clientUuid
       })
@@ -632,7 +650,7 @@ const finishDragging = buildUndoableCommand(
 function moveDragging(command: MoveDragging, context: CommandContext) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -656,7 +674,7 @@ function undoClientCommand(
 ) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -667,6 +685,30 @@ function undoClientCommand(
 
   if (lastCommand == null) {
     throw new Error('No command to undo')
+  }
+
+  for (const node of lastCommand.selection) {
+    const nodeEditor = context.getState().session.nodeEditors[node]
+
+    const editedByOtherUser =
+      nodeEditor != null && nodeEditor !== command.payload.clientUuid
+
+    const seletedByOtherUser = Object.values(
+      context.getState().session.clients
+    ).some(
+      (client) =>
+        client.uuid !== command.payload.clientUuid &&
+        client.selection.includes(node)
+    )
+
+    if (seletedByOtherUser || editedByOtherUser) {
+      context.dispatch([
+        new LastClientCommandUndoSkipped({
+          clientUuid: command.payload.clientUuid
+        })
+      ])
+      return
+    }
   }
 
   const events = [
@@ -689,7 +731,7 @@ function redoClientCommand(
 ) {
   const client = SessionSelectors.getConnectedClient(
     command.payload.clientUuid,
-    context.state.session
+    context.getState().session
   )
 
   if (client == null) {
@@ -700,6 +742,30 @@ function redoClientCommand(
 
   if (lastCommand == null) {
     throw new Error('No command to redo')
+  }
+
+  for (const node of lastCommand.selection) {
+    const nodeEditor = context.getState().session.nodeEditors[node]
+
+    const editedByOtherUser =
+      nodeEditor != null && nodeEditor !== command.payload.clientUuid
+
+    const seletedByOtherUser = Object.values(
+      context.getState().session.clients
+    ).some(
+      (client) =>
+        client.uuid !== command.payload.clientUuid &&
+        client.selection.includes(node)
+    )
+
+    if (seletedByOtherUser || editedByOtherUser) {
+      context.dispatch([
+        new LastClientCommandRedoSkipped({
+          clientUuid: command.payload.clientUuid
+        })
+      ])
+      return
+    }
   }
 
   const events = [

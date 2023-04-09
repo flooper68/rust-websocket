@@ -101,11 +101,19 @@ function createApplication(canvasContainer: HTMLElement, client: WsClient) {
   }
 
   function createImage(uuid: string) {
-    addComponent(CanvasImage.create(uuid, app.stage, client))
+    if (canvasComponents[uuid] == null) {
+      addComponent(CanvasImage.create(uuid, app.stage, client))
+    } else {
+      renderNode(uuid)
+    }
   }
 
   function createRectangle(uuid: string) {
-    addComponent(CanvasRectangle.create(uuid, app.stage, client))
+    if (canvasComponents[uuid] == null) {
+      addComponent(CanvasRectangle.create(uuid, app.stage, client))
+    } else {
+      renderNode(uuid)
+    }
   }
 
   function createCursor(clientUuid: string) {
@@ -236,8 +244,11 @@ export function Canvas(props: { client: WsClient }) {
         }
         case DocumentEventType.NodeLocked:
         case DocumentEventType.NodeUnlocked:
+        case SessionEventType.NodesEdited:
         case SessionEventType.ClientCommandAddedToHistory:
+        case SessionEventType.LastClientCommandUndoSkipped:
         case SessionEventType.LastClientCommandRedone:
+        case SessionEventType.LastClientCommandRedoSkipped:
         case SessionEventType.LastClientCommandUndone: {
           break
         }

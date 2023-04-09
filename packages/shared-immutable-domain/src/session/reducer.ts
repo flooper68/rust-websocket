@@ -1,4 +1,5 @@
 import { match } from 'ts-pattern'
+import { NodeUuid } from '../document/types.js'
 import {
   ClientAlreadyExists,
   ClientIsAlreadyDragging,
@@ -19,7 +20,11 @@ import {
   ClientCommandAddedToHistory,
   ConnectedClient,
   LastClientCommandUndone,
-  LastClientCommandRedone
+  LastClientCommandRedone,
+  NodesEdited,
+  ClientUuid,
+  LastClientCommandUndoSkipped,
+  LastClientCommandRedoSkipped
 } from './types.js'
 
 function reduceClientConnected(
@@ -98,6 +103,19 @@ function reduceNodesSelected(
 
   if (client == null) {
     throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  for (const node of event.payload.nodes) {
+    Object.values(state.clients).forEach((client) => {
+      if (
+        client.uuid !== event.payload.clientUuid &&
+        client.selection.includes(node)
+      ) {
+        throw new Error(
+          `Node ${node} is already selected by client ${client.uuid}`
+        )
+      }
+    })
   }
 
   const updatedClient = {
@@ -259,6 +277,35 @@ function reduceLastClientCommandUndone(
   }
 }
 
+function reduceLastClientCommandUndoSkipped(
+  event: LastClientCommandUndoSkipped,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+  const lastCommand = client.undoStack[client.undoStack.length - 1]
+
+  if (!lastCommand) {
+    throw new Error(`No command to skip!`)
+  }
+
+  const updatedClient: ConnectedClient = {
+    ...client,
+    undoStack: client.undoStack.slice(0, -1)
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
 function reduceLastClientCommandRedone(
   event: LastClientCommandRedone,
   state: SessionState
@@ -285,6 +332,63 @@ function reduceLastClientCommandRedone(
     clients: {
       ...state.clients,
       [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceLastClientCommandRedoSkipped(
+  event: LastClientCommandRedoSkipped,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+  const lastCommand = client.redoStack[client.redoStack.length - 1]
+
+  if (!lastCommand) {
+    throw new Error(`No command to skip!`)
+  }
+
+  const updatedClient: ConnectedClient = {
+    ...client,
+    redoStack: client.redoStack.slice(0, -1)
+  }
+
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [event.payload.clientUuid]: updatedClient
+    }
+  }
+}
+
+function reduceNodesEdited(
+  event: NodesEdited,
+  state: SessionState
+): SessionState {
+  const client = state.clients[event.payload.clientUuid]
+
+  if (client == null) {
+    throw new ClientIsNotConnected(event.payload.clientUuid)
+  }
+
+  const editedNodes = event.payload.nodes.reduce<Record<NodeUuid, ClientUuid>>(
+    (acc, node) => {
+      acc[node] = event.payload.clientUuid
+
+      return acc
+    },
+    {}
+  )
+
+  return {
+    ...state,
+    nodeEditors: {
+      ...state.nodeEditors,
+      ...editedNodes
     }
   }
 }
@@ -347,9 +451,27 @@ function reduce(event: SessionEvent, state: SessionState): SessionState {
     )
     .with(
       {
+        type: SessionEventType.LastClientCommandUndoSkipped
+      },
+      (e) => reduceLastClientCommandUndoSkipped(e, state)
+    )
+    .with(
+      {
         type: SessionEventType.LastClientCommandRedone
       },
       (e) => reduceLastClientCommandRedone(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.LastClientCommandRedoSkipped
+      },
+      (e) => reduceLastClientCommandRedoSkipped(e, state)
+    )
+    .with(
+      {
+        type: SessionEventType.NodesEdited
+      },
+      (e) => reduceNodesEdited(e, state)
     )
     .exhaustive()
 }

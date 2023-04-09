@@ -49,7 +49,9 @@ export function TopControl(props: {
     const sub = client.domainStream$.subscribe((e) => {
       switch (e.type) {
         case SessionEventType.LastClientCommandUndone:
+        case SessionEventType.LastClientCommandUndoSkipped:
         case SessionEventType.LastClientCommandRedone:
+        case SessionEventType.LastClientCommandRedoSkipped:
         case SessionEventType.ClientCommandAddedToHistory: {
           const connectedClient = client.getState().session.clients[CLIENT_UUID]
 
