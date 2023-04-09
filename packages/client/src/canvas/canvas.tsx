@@ -237,6 +237,7 @@ export function Canvas(props: { client: WsClient }) {
           app.renderNode(event.payload.uuid)
           break
         }
+        case DocumentEventType.NodeRestored:
         case DocumentEventType.NodeFillSet:
         case DocumentEventType.NodeUrlSet: {
           app.renderNode(event.payload.uuid)

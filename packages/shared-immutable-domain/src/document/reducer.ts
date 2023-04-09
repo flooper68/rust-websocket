@@ -4,6 +4,7 @@ import {
   NodeDoesNotExist,
   NodeIsAlreadyDeleted,
   NodeIsNotActive,
+  NodeIsNotDeleted,
   NodeIsNotImage,
   NodeIsNotLocked,
   NodeIsNotRectangle
@@ -18,6 +19,7 @@ import {
   NodeKind,
   NodeLocked,
   NodeMoved,
+  NodeRestored,
   NodeStatus,
   NodeUnlocked,
   NodeUrlSet,
@@ -90,18 +92,46 @@ function reduceNodeDeleted(
   }
 }
 
+function reduceNodeRestored(
+  event: NodeRestored,
+  state: DocumentState
+): DocumentState {
+  const node = state.nodes[event.payload.uuid]
+
+  if (node == null) {
+    throw new NodeDoesNotExist(event.payload.uuid)
+  }
+
+  if (node.status !== NodeStatus.Deleted) {
+    throw new NodeIsNotDeleted(event.payload.uuid)
+  }
+
+  const updatedNode = {
+    ...node,
+    status: NodeStatus.Active
+  }
+
+  return {
+    ...state,
+    nodes: {
+      ...state.nodes,
+      [node.uuid]: updatedNode
+    }
+  }
+}
+
 function reduceNodeLocked(
   event: NodeLocked,
   state: DocumentState
 ): DocumentState {
-  const node = state.nodes[event.payload]
+  const node = state.nodes[event.payload.uuid]
 
   if (node == null) {
-    throw new NodeDoesNotExist(event.payload)
+    throw new NodeDoesNotExist(event.payload.uuid)
   }
 
   if (node.status !== NodeStatus.Active) {
-    throw new NodeIsNotActive(event.payload)
+    throw new NodeIsNotActive(event.payload.uuid)
   }
 
   const updatedNode = {
@@ -122,14 +152,14 @@ function reduceNodeUnlocked(
   event: NodeUnlocked,
   state: DocumentState
 ): DocumentState {
-  const node = state.nodes[event.payload]
+  const node = state.nodes[event.payload.uuid]
 
   if (node == null) {
-    throw new NodeDoesNotExist(event.payload)
+    throw new NodeDoesNotExist(event.payload.uuid)
   }
 
   if (node.status !== NodeStatus.Locked) {
-    throw new NodeIsNotLocked(event.payload)
+    throw new NodeIsNotLocked(event.payload.uuid)
   }
 
   const updatedNode = {
@@ -303,6 +333,14 @@ function reduce(event: DocumentEvent, state: DocumentState): DocumentState {
       },
       (e) => {
         return reduceNodeUrlSet(e, state)
+      }
+    )
+    .with(
+      {
+        type: DocumentEventType.NodeRestored
+      },
+      (e) => {
+        return reduceNodeRestored(e, state)
       }
     )
     .exhaustive()

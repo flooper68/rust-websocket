@@ -99,6 +99,7 @@ export enum DocumentEventType {
   RectangleCreated = 'RectangleCreated',
   ImageCreated = 'ImageCreated',
   NodeDeleted = 'NodeDeleted',
+  NodeRestored = 'NodeRestored',
   NodeLocked = 'NodeLocked',
   NodeUnlocked = 'NodeUnlocked',
   NodeMoved = 'NodeMoved',
@@ -121,14 +122,19 @@ export class NodeDeleted {
   constructor(readonly payload: { uuid: NodeUuid }) {}
 }
 
+export class NodeRestored {
+  readonly type = DocumentEventType.NodeRestored
+  constructor(readonly payload: { uuid: NodeUuid }) {}
+}
+
 export class NodeLocked {
   readonly type = DocumentEventType.NodeLocked
-  constructor(readonly payload: NodeUuid) {}
+  constructor(readonly payload: { uuid: NodeUuid }) {}
 }
 
 export class NodeUnlocked {
   readonly type = DocumentEventType.NodeUnlocked
-  constructor(readonly payload: NodeUuid) {}
+  constructor(readonly payload: { uuid: NodeUuid }) {}
 }
 
 export class NodeMoved {
@@ -161,6 +167,23 @@ export type DocumentEvent =
   | NodeMoved
   | NodeUrlSet
   | NodeFillSet
+  | NodeRestored
+
+export function isNodeEvent(event: { type: string }): event is DocumentEvent {
+  return (
+    [
+      DocumentEventType.RectangleCreated,
+      DocumentEventType.ImageCreated,
+      DocumentEventType.NodeDeleted,
+      DocumentEventType.NodeLocked,
+      DocumentEventType.NodeUnlocked,
+      DocumentEventType.NodeMoved,
+      DocumentEventType.NodeUrlSet,
+      DocumentEventType.NodeFillSet,
+      DocumentEventType.NodeRestored
+    ] as string[]
+  ).includes(event.type)
+}
 
 export interface DocumentState {
   nodes: Record<NodeUuid, Node>

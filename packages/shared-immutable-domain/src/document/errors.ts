@@ -7,7 +7,8 @@ export enum DocumentErrorType {
   NodeIsNotImage = 'NodeIsNotImage',
   NodeIsNotActive = 'NodeIsNotActive',
   NodeIsAlreadyDeleted = 'NodeIsAlreadyDeleted',
-  NodeIsNotLocked = 'NodeIsNotLocked'
+  NodeIsNotLocked = 'NodeIsNotLocked',
+  NodeIsNotDeleted = 'NodeIsNotDeleted'
 }
 
 export class NodeAlreadyExist extends Error {
@@ -59,6 +60,13 @@ export class NodeIsNotLocked extends Error {
   }
 }
 
+export class NodeIsNotDeleted extends Error {
+  readonly type = DocumentErrorType.NodeIsNotDeleted
+  constructor(readonly uuid: NodeUuid) {
+    super(`Node with uuid ${uuid} is not deleted.`)
+  }
+}
+
 export type DocumentError =
   | NodeAlreadyExist
   | NodeDoesNotExist
@@ -66,3 +74,4 @@ export type DocumentError =
   | NodeIsNotImage
   | NodeIsNotActive
   | NodeIsNotLocked
+  | NodeIsNotDeleted

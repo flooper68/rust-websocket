@@ -136,12 +136,6 @@ export class DocumentSessionRoot {
       )
       .with(
         {
-          type: DocumentSessionCommandType.MoveSelection
-        },
-        (c) => DocumentSessionCommands.moveSelection(c, context)
-      )
-      .with(
-        {
           type: DocumentSessionCommandType.SetImageSelectionUrl
         },
         (c) => DocumentSessionCommands.setImageSelectionUrl(c, context)

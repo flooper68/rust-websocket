@@ -33,7 +33,7 @@ export enum SessionEventType {
   ClientConnected = 'ClientConnected',
   ClientDisconnected = 'ClientDisconnected',
   ClientCursorMoved = 'ClientCursorMoved',
-  NodesSelected = 'NodeSelected',
+  NodesSelected = 'NodesSelected',
   DraggingStarted = 'DraggingStarted',
   DraggingMoved = 'DraggingMoved',
   DraggingFinished = 'DraggingStopped',
