@@ -1,10 +1,8 @@
-import { DomainSelectors } from '@shared/domain'
 import {
   FinishDragging,
   MoveDragging,
   NodeStatus,
   SelectNodes,
-  SessionSelectors,
   StartDragging
 } from '@shared/immutable-domain'
 import { CLIENT_UUID, WsClient } from '../../../client/ws-client'

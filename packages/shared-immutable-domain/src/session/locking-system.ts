@@ -13,7 +13,7 @@ import {
 } from '../document/types.js'
 import { SelectionSystem } from './selection-system.js'
 import { ClientUuid } from './types.js'
-import { UndoRedoSystem } from './undo-redo-system.js'
+import { UndoRedoSystem } from './undo-redo.js'
 
 export class LockingSystem {
   private _selectionSystem: SelectionSystem

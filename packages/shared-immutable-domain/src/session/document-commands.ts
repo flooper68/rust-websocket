@@ -16,7 +16,7 @@ import {
   RectangleCreated
 } from '../document/types.js'
 import { LockingSystem } from './locking-system.js'
-import { UndoRedoSystem } from './undo-redo-system.js'
+import { UndoRedoSystem } from './undo-redo.js'
 
 export class DocumentCommands {
   private _undoRedoSystem: UndoRedoSystem

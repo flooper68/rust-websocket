@@ -14,7 +14,7 @@ import {
 } from './session/session-system.js'
 import { ClientUuid, DocumentSessionEvent } from './session/types.js'
 import { DocumentCommands } from './session/document-commands.js'
-import { ClientUndoRedo, UndoRedoSystem } from './session/undo-redo-system.js'
+import { ClientUndoRedo, UndoRedoSystem } from './session/undo-redo.js'
 
 export interface DocumentSessionState {
   session: {

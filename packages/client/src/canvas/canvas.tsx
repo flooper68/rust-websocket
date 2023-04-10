@@ -1,4 +1,4 @@
-import { startMeasurement } from '@shared/domain/src/measure'
+import { startMeasurement } from '@shared/common'
 import {
   DocumentEventType,
   DocumentSessionState,
