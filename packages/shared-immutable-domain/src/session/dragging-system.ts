@@ -4,16 +4,16 @@ import {
   FinishDragging,
   MoveDragging,
   StartDragging
-} from './commands.js'
-import { NodeMoved, PositionValue } from './document/types.js'
+} from '../commands.js'
+import { NodeMoved, PositionValue } from '../document/types.js'
 import { LockingSystem } from './locking-system'
 import { SessionSystem, SessionSystemEventType } from './session-system.js'
 import {
   ClientIsAlreadyDragging,
   ClientIsNotConnected,
   ClientIsNotDragging
-} from './session/errors.js'
-import { ClientUuid } from './session/types.js'
+} from './errors.js'
+import { ClientUuid } from './types.js'
 
 interface DraggingSystemState {
   clientDragging: Record<

@@ -4,10 +4,10 @@ import {
   DisconnectClient,
   DocumentSessionCommandType,
   MoveClientCursor
-} from './commands.js'
-import { ClientAlreadyExists, ClientIsNotConnected } from './session/errors.js'
-import { SessionFactories } from './session/factories.js'
-import { ClientColor, ClientName, ClientUuid } from './session/types.js'
+} from '../commands.js'
+import { ClientAlreadyExists, ClientIsNotConnected } from './errors.js'
+import { SessionFactories } from './factories.js'
+import { ClientColor, ClientName, ClientUuid } from './types.js'
 
 export interface SessionConnectedClient {
   uuid: ClientUuid

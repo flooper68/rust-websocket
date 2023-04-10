@@ -3,11 +3,11 @@ import {
   AddNodeToSelection,
   DocumentSessionCommandType,
   SelectNodes
-} from './commands.js'
-import { NodeUuid } from './document/types.js'
+} from '../commands.js'
+import { NodeUuid } from '../document/types.js'
 import { SessionSystem, SessionSystemEventType } from './session-system.js'
-import { ClientIsNotConnected } from './session/errors.js'
-import { ClientUuid } from './session/types.js'
+import { ClientIsNotConnected } from './errors.js'
+import { ClientUuid } from './types.js'
 
 interface SelectionSystemState {
   selections: Record<ClientUuid, { uuid: ClientUuid; selection: NodeUuid[] }>

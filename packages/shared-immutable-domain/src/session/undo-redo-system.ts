@@ -4,18 +4,18 @@ import {
   RedoClientCommand,
   SelectNodes,
   UndoClientCommand
-} from './commands.js'
-import { Document } from './document.js'
+} from '../commands.js'
+import { Document } from '../document/document.js'
 import {
   DocumentEvent,
   DocumentEventType,
   isNodeEvent,
   NodeUuid
-} from './document/types.js'
+} from '../document/types.js'
 import { SelectionSystem } from './selection-system.js'
 import { SessionSystem, SessionSystemEventType } from './session-system.js'
-import { ClientIsNotConnected } from './session/errors.js'
-import { ClientUuid } from './session/types.js'
+import { ClientIsNotConnected } from './errors.js'
+import { ClientUuid } from './types.js'
 
 export interface CommittedCommand {
   redoEvents: DocumentEvent[]

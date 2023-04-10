@@ -4,8 +4,8 @@ import {
   DeleteSelection,
   DocumentSessionCommandType,
   SetRectangleSelectionFill
-} from './commands.js'
-import { NodeFactories } from './document/factories.js'
+} from '../commands.js'
+import { NodeFactories } from '../document/factories.js'
 import {
   ImageCreated,
   isRectangle,
@@ -14,11 +14,11 @@ import {
   NodeRestored,
   Rectangle,
   RectangleCreated
-} from './document/types.js'
+} from '../document/types.js'
 import { LockingSystem } from './locking-system.js'
-import { UndoRedoSystem } from './undo-redo.js'
+import { UndoRedoSystem } from './undo-redo-system.js'
 
-export class CommandsNew {
+export class DocumentCommands {
   private _undoRedoSystem: UndoRedoSystem
   private _lockingSystem: LockingSystem
 

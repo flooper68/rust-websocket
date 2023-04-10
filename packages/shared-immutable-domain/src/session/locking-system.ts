@@ -2,18 +2,18 @@ import {
   DocumentSessionCommandType,
   LockSelection,
   UnlockSelection
-} from './commands.js'
-import { Document } from './document.js'
+} from '../commands.js'
+import { Document } from '../document/document.js'
 import {
   DocumentEvent,
   isActiveNode,
   Node,
   NodeLocked,
   NodeUnlocked
-} from './document/types.js'
+} from '../document/types.js'
 import { SelectionSystem } from './selection-system.js'
-import { ClientUuid } from './session/types.js'
-import { UndoRedoSystem } from './undo-redo.js'
+import { ClientUuid } from './types.js'
+import { UndoRedoSystem } from './undo-redo-system.js'
 
 export class LockingSystem {
   private _selectionSystem: SelectionSystem

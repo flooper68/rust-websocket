@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs'
-import { DocumentReducer } from './document/reducer.js'
-import { DocumentEvent, DocumentState } from './document/types.js'
+import { DocumentReducer } from './reducer.js'
+import { DocumentEvent, DocumentState } from './types.js'
 
 export class Document {
   private _state: DocumentState

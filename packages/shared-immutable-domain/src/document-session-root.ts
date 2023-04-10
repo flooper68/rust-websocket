@@ -3,15 +3,18 @@ import {
   DocumentSessionCommand,
   DocumentSessionCommandType
 } from './commands.js'
-import { Document } from './document.js'
+import { Document } from './document/document.js'
 import { DocumentState, NodeUuid, PositionValue } from './document/types.js'
-import { DraggingSystem } from './dragging-system.js'
-import { LockingSystem } from './locking-system.js'
-import { SelectionSystem } from './selection-system.js'
-import { SessionConnectedClient, SessionSystem } from './session-system.js'
+import { DraggingSystem } from './session/dragging-system.js'
+import { LockingSystem } from './session/locking-system.js'
+import { SelectionSystem } from './session/selection-system.js'
+import {
+  SessionConnectedClient,
+  SessionSystem
+} from './session/session-system.js'
 import { ClientUuid, DocumentSessionEvent } from './session/types.js'
-import { CommandsNew } from './system-commands.js'
-import { ClientUndoRedo, UndoRedoSystem } from './undo-redo.js'
+import { DocumentCommands } from './session/document-commands.js'
+import { ClientUndoRedo, UndoRedoSystem } from './session/undo-redo-system.js'
 
 export interface DocumentSessionState {
   session: {
@@ -37,7 +40,7 @@ export class DocumentSessionRoot {
   private _undoRedoSystem: UndoRedoSystem
   private _lockingSystem: LockingSystem
   private _draggingSystem: DraggingSystem
-  private _commandsNew: CommandsNew
+  private _commandsNew: DocumentCommands
 
   public domainStream$: Observable<DocumentSessionEvent>
 
@@ -87,7 +90,7 @@ export class DocumentSessionRoot {
       this._lockingSystem
     )
 
-    this._commandsNew = new CommandsNew(
+    this._commandsNew = new DocumentCommands(
       this._undoRedoSystem,
       this._lockingSystem
     )
