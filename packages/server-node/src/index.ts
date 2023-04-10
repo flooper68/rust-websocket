@@ -8,10 +8,14 @@ import {
 } from '@shared/immutable-domain'
 import { Subject } from 'rxjs'
 import { WebSocketServer } from 'ws'
+import { generateInitialState } from './generate-initial-state.js'
 
 const PORT = 6464
+const AMOUNT_OF_NODES = 1000
 
-const documentSessionRoot = new DocumentSessionRoot()
+const documentSessionRoot = new DocumentSessionRoot(
+  generateInitialState({ amountOfNodes: AMOUNT_OF_NODES })
+)
 
 const wss = new WebSocketServer({
   port: PORT

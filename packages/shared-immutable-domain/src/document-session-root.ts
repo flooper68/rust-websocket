@@ -56,7 +56,6 @@ export class DocumentSessionRoot {
       document: { nodes: {} }
     }
   ) {
-    console.log('initialState', initialState)
     this._document = new Document(initialState.document)
     this._sessionSystem = new SessionSystem({
       clients: initialState.session.clients

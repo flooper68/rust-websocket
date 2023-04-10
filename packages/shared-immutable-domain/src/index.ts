@@ -18,7 +18,9 @@ export {
   SetRectangleSelectionFill,
   StartDragging,
   MoveDragging,
-  FinishDragging,UndoClientCommand, RedoClientCommand
+  FinishDragging,
+  UndoClientCommand,
+  RedoClientCommand
 } from './commands.js'
 export { SessionSelectors } from './selectors.js'
 export { SessionEventType, type DocumentSessionEvent } from './session/types.js'
@@ -26,5 +28,8 @@ export {
   NodeKind,
   NodeStatus,
   DocumentEventType,
-  type Node
+  type Node,
+  type NodeUuid,
+  type Image,
+  type Rectangle
 } from './document/types.js'
