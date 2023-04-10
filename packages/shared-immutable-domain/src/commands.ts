@@ -1,15 +1,5 @@
 import { DocumentSessionState } from './document-session-root.js'
-import { NodeFactories } from './document/factories.js'
-import {
-  Fill,
-  ImageUrl,
-  NodeDeleted,
-  NodeMoved,
-  NodeRestored,
-  NodeUuid,
-  PositionValue,
-  RectangleCreated
-} from './document/types.js'
+import { Fill, ImageUrl, NodeUuid, PositionValue } from './document/types.js'
 import { addNodeToSelection } from './handlers/add-node-to-selection.js'
 import { connectClient } from './handlers/connect-client.js'
 import { createImage } from './handlers/create-image.js'
@@ -22,16 +12,12 @@ import { setImageSelectionUrl } from './handlers/set-image-selection-url.js'
 import { setRectangleSelectionFill } from './handlers/set-rectangle-selection-fill.js'
 import { startDragging } from './handlers/start-dragging.js'
 import { unlockSelection } from './handlers/unlock-selection.js'
-import { SessionSelectors } from './selectors.js'
 import {
   ClientColor,
   ClientName,
   ClientUuid,
-  DocumentSessionEvent,
-  DraggingFinished,
-  NodesSelected
+  DocumentSessionEvent
 } from './session/types.js'
-import { UndoRedoBuilder } from './undo-redo-system.js'
 
 export enum DocumentSessionCommandType {
   LockSelection = 'LockSelection',
@@ -138,6 +124,8 @@ export class CreateRectangle {
       clientUuid: ClientUuid
       uuid: NodeUuid
       fill: Fill
+      left: PositionValue
+      top: PositionValue
     }
   ) {}
 }
@@ -148,6 +136,8 @@ export class CreateImage {
     public payload: {
       clientUuid: ClientUuid
       uuid: NodeUuid
+      left: PositionValue
+      top: PositionValue
     }
   ) {}
 }
@@ -257,113 +247,3 @@ export const DocumentSessionCommands = {
   startDragging,
   moveDragging
 }
-
-export const Commands = new UndoRedoBuilder()
-  .undoableCommand(
-    DocumentSessionCommandType.CreateRectangle,
-    (command: CreateRectangle) => {
-      const rectangle = NodeFactories.createRectangle({
-        uuid: command.payload.uuid,
-        fill: command.payload.fill
-      })
-
-      const redoEvents = [
-        new RectangleCreated(rectangle),
-        new NodesSelected({
-          clientUuid: command.payload.clientUuid,
-          nodes: [rectangle.uuid]
-        })
-      ]
-
-      const undoEvents = [new NodeDeleted({ uuid: rectangle.uuid })]
-
-      return {
-        undoEvents,
-        redoEvents,
-        transientEvents: []
-      }
-    }
-  )
-  .undoableCommand(
-    DocumentSessionCommandType.DeleteSelection,
-    (command: DeleteSelection, context) => {
-      const activeSelection = SessionSelectors.getClientActiveSelection(
-        command.payload.clientUuid,
-        context.getState()
-      )
-
-      const redoEvents = [
-        ...activeSelection.map((node) => {
-          return new NodeDeleted({ uuid: node.uuid })
-        }),
-        new NodesSelected({ clientUuid: command.payload.clientUuid, nodes: [] })
-      ]
-
-      const undoEvents = [
-        ...activeSelection.map((node) => {
-          return new NodeRestored({ uuid: node.uuid })
-        }),
-        new NodesSelected({
-          clientUuid: command.payload.clientUuid,
-          nodes: activeSelection.map((node) => node.uuid)
-        })
-      ]
-
-      return {
-        redoEvents,
-        undoEvents,
-        transientEvents: []
-      }
-    }
-  )
-  .undoableCommand(
-    DocumentSessionCommandType.FinishDragging,
-    (command: FinishDragging, context) => {
-      const client = SessionSelectors.getConnectedClient(
-        command.payload.clientUuid,
-        context.getState().session
-      )
-
-      if (client == null) {
-        throw new Error('Client not connected')
-      }
-
-      const activeSelection = SessionSelectors.getClientActiveSelection(
-        command.payload.clientUuid,
-        context.getState()
-      )
-
-      const redoEvents = [
-        ...activeSelection.map((node) => {
-          return new NodeMoved({
-            uuid: node.uuid,
-            left: node.left + (client.dragging?.left ?? 0),
-            top: node.top + (client.dragging?.top ?? 0)
-          })
-        })
-      ]
-
-      const transientEvents = [
-        new DraggingFinished({
-          clientUuid: command.payload.clientUuid
-        })
-      ]
-
-      const undoEvents = [
-        ...activeSelection.map((node) => {
-          return new NodeMoved({
-            uuid: node.uuid,
-            left: node.left,
-            top: node.top
-          })
-        })
-      ]
-
-      return {
-        undoEvents,
-        redoEvents,
-        transientEvents
-      }
-    }
-  )
-  .build()

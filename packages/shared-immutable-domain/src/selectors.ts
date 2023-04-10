@@ -22,7 +22,7 @@ const getClientSelection = (
   clientUuid: ClientUuid,
   state: DocumentSessionState
 ) => {
-  const client = getConnectedClient(clientUuid, state.session)
+  const client = state.session.selections[clientUuid]
 
   if (client == null) {
     throw new Error('Client not found')

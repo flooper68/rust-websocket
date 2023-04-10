@@ -1,200 +1,158 @@
-import { Observable, Subject } from 'rxjs'
-import { match } from 'ts-pattern'
+import { merge, Observable } from 'rxjs'
 import {
-  Commands,
   DocumentSessionCommand,
-  DocumentSessionCommands,
   DocumentSessionCommandType
 } from './commands.js'
-import { DocumentReducer } from './document/reducer.js'
-import {
-  DocumentEvent,
-  DocumentEventType,
-  DocumentState
-} from './document/types.js'
-import { SessionReducer } from './session/reducer.js'
-import {
-  DocumentSessionEvent,
-  SessionEvent,
-  SessionState
-} from './session/types.js'
+import { Document } from './document.js'
+import { DocumentState, NodeUuid, PositionValue } from './document/types.js'
+import { DraggingSystem } from './dragging-system.js'
+import { LockingSystem } from './locking-system.js'
+import { SelectionSystem } from './selection-system.js'
+import { SessionConnectedClient, SessionSystem } from './session-system.js'
+import { ClientUuid, DocumentSessionEvent } from './session/types.js'
+import { CommandsNew } from './system-commands.js'
+import { ClientUndoRedo, UndoRedoSystem } from './undo-redo.js'
 
 export interface DocumentSessionState {
-  session: SessionState
+  session: {
+    clients: Record<ClientUuid, SessionConnectedClient>
+    selections: Record<ClientUuid, { uuid: ClientUuid; selection: NodeUuid[] }>
+    clientCommands: Record<ClientUuid, ClientUndoRedo>
+    nodeEditors: Record<NodeUuid, ClientUuid>
+    clientDragging: Record<
+      ClientUuid,
+      {
+        uuid: ClientUuid
+        dragging: { left: PositionValue; top: PositionValue } | null
+      }
+    >
+  }
   document: DocumentState
 }
 
 export class DocumentSessionRoot {
-  private _documentState: DocumentState
-  private _sessionState: SessionState
-  private _domainSubject$ = new Subject<DocumentSessionEvent>()
+  private _document: Document
+  private _sessionSystem: SessionSystem
+  private _selectionSystem: SelectionSystem
+  private _undoRedoSystem: UndoRedoSystem
+  private _lockingSystem: LockingSystem
+  private _draggingSystem: DraggingSystem
+  private _commandsNew: CommandsNew
 
   public domainStream$: Observable<DocumentSessionEvent>
 
   constructor(
-    initialState: {
-      session: SessionState
-      document: DocumentState
-    } = {
-      session: { clients: {}, nodeEditors: {} },
+    initialState: DocumentSessionState = {
+      session: {
+        clients: {},
+        selections: {},
+        clientCommands: {},
+        nodeEditors: {},
+        clientDragging: {}
+      },
       document: { nodes: {} }
     }
   ) {
-    this._documentState = initialState.document
-    this._sessionState = initialState.session
-    this.domainStream$ = this._domainSubject$.asObservable()
-  }
+    console.log('initialState', initialState)
+    this._document = new Document(initialState.document)
+    this._sessionSystem = new SessionSystem({
+      clients: initialState.session.clients
+    })
+    this._selectionSystem = new SelectionSystem(
+      {
+        selections: initialState.session.selections
+      },
+      this._sessionSystem
+    )
+    this._undoRedoSystem = new UndoRedoSystem(
+      {
+        clientCommands: initialState.session.clientCommands,
+        nodeEditors: initialState.session.nodeEditors
+      },
+      this._sessionSystem,
+      this._selectionSystem,
+      this._document
+    )
+    this._lockingSystem = new LockingSystem(
+      this._selectionSystem,
+      this._document,
+      this._undoRedoSystem
+    )
 
-  private _dispatchEvent = (events: DocumentSessionEvent[]) => {
-    const documentState = this._documentState
-    const sessionState = this._sessionState
+    this._draggingSystem = new DraggingSystem(
+      {
+        clientDragging: initialState.session.clientDragging
+      },
+      this._sessionSystem,
+      this._lockingSystem
+    )
 
-    try {
-      for (const event of events) {
-        console.log(`Reducing event: ${event.type}.`)
+    this._commandsNew = new CommandsNew(
+      this._undoRedoSystem,
+      this._lockingSystem
+    )
 
-        if (Object.values<string>(DocumentEventType).includes(event.type)) {
-          this._documentState = DocumentReducer.reduce(
-            event as DocumentEvent,
-            this._documentState
-          )
-        } else {
-          this._sessionState = SessionReducer.reduce(
-            event as SessionEvent,
-            this._sessionState
-          )
-        }
-      }
-
-      events.forEach((event) => {
-        this._domainSubject$.next(event)
-      })
-    } catch (e) {
-      console.error(
-        `There was an error reducing DomainRoot events: ${e}, rolling back changes.`
-      )
-
-      this._documentState = documentState
-      this._sessionState = sessionState
-    }
+    this.domainStream$ = merge(
+      this._document.eventStream$,
+      this._sessionSystem.eventStream$,
+      this._selectionSystem.eventStream$,
+      this._undoRedoSystem.eventStream$,
+      this._draggingSystem.eventStream$
+    ) as Observable<DocumentSessionEvent>
   }
 
   getState(): DocumentSessionState {
-    return { session: this._sessionState, document: this._documentState }
+    return {
+      session: {
+        clients: this._sessionSystem.getState().clients,
+        selections: this._selectionSystem.getState(),
+        clientCommands: this._undoRedoSystem.getState().clientCommands,
+        nodeEditors: this._undoRedoSystem.getState().nodeEditors,
+        clientDragging: this._draggingSystem.getState()
+      },
+      document: this._document.getState()
+    }
   }
 
   dispatch(command: DocumentSessionCommand) {
-    const context = {
-      getState: () => ({
-        session: this._sessionState,
-        document: this._documentState
-      }),
-      dispatch: this._dispatchEvent
+    switch (command.type) {
+      case DocumentSessionCommandType.ConnectClient:
+      case DocumentSessionCommandType.DisconnectClient:
+      case DocumentSessionCommandType.MoveClientCursor: {
+        this._sessionSystem.dispatch(command)
+        break
+      }
+      case DocumentSessionCommandType.SelectNodes:
+      case DocumentSessionCommandType.AddNodeToSelection: {
+        this._selectionSystem.dispatch(command)
+        break
+      }
+      case DocumentSessionCommandType.UndoClientCommand:
+      case DocumentSessionCommandType.RedoClientCommand: {
+        this._undoRedoSystem.dispatch(command)
+        break
+      }
+      case DocumentSessionCommandType.LockSelection:
+      case DocumentSessionCommandType.UnlockSelection: {
+        this._lockingSystem.dispatch(command)
+        break
+      }
+      case DocumentSessionCommandType.DeleteSelection:
+      case DocumentSessionCommandType.CreateRectangle:
+      case DocumentSessionCommandType.CreateImage:
+      case DocumentSessionCommandType.SetRectangleSelectionFill: {
+        this._commandsNew.dispatch(command)
+        break
+      }
+      case DocumentSessionCommandType.StartDragging:
+      case DocumentSessionCommandType.MoveDragging:
+      case DocumentSessionCommandType.FinishDragging: {
+        this._draggingSystem.dispatch(command)
+        break
+      }
+      default: {
+        console.warn(`Unhandled command: ${command.type}.`)
+      }
     }
-
-    match(command)
-      .with(
-        {
-          type: DocumentSessionCommandType.ConnectClient
-        },
-        (c) => DocumentSessionCommands.connectClient(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.CreateImage
-        },
-        (c) => DocumentSessionCommands.createImage(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.CreateRectangle
-        },
-        (c) => Commands.dispatch(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.DeleteSelection
-        },
-        (c) => Commands.dispatch(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.DisconnectClient
-        },
-        (c) => DocumentSessionCommands.disconnectClient(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.LockSelection
-        },
-        (c) => DocumentSessionCommands.lockSelection(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.MoveClientCursor
-        },
-        (c) => DocumentSessionCommands.moveClientCursor(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.SetImageSelectionUrl
-        },
-        (c) => DocumentSessionCommands.setImageSelectionUrl(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.SetRectangleSelectionFill
-        },
-        (c) => DocumentSessionCommands.setRectangleSelectionFill(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.UnlockSelection
-        },
-        (c) => DocumentSessionCommands.unlockSelection(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.SelectNodes
-        },
-        (c) => DocumentSessionCommands.selectNodes(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.AddNodeToSelection
-        },
-        (c) => DocumentSessionCommands.addNodeToSelection(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.StartDragging
-        },
-        (c) => DocumentSessionCommands.startDragging(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.FinishDragging
-        },
-        (c) => Commands.dispatch(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.MoveDragging
-        },
-        (c) => DocumentSessionCommands.moveDragging(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.UndoClientCommand
-        },
-        (c) => Commands.dispatch(c, context)
-      )
-      .with(
-        {
-          type: DocumentSessionCommandType.RedoClientCommand
-        },
-        (c) => Commands.dispatch(c, context)
-      )
-      .exhaustive()
   }
 }
