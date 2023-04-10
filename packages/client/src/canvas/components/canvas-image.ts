@@ -54,13 +54,14 @@ export class CanvasImage {
   render() {
     const image = getImageOrFail(this.uuid, this._client)
 
-    const client = Object.values(this._client.getState().session.clients).find(
-      (client) => client.selection.includes(this.uuid)
-    )
+    const client = Object.values(
+      this._client.getState().session.selections
+    ).find((selection) => selection.selection.includes(this.uuid))
 
-    const draggingOffset = client?.dragging ?? { left: 0, top: 0 }
-
-    console.log(`Rendering CanvasImage ${this.uuid}.`, image)
+    const draggingOffset =
+      client != null
+        ? this._client.getState().session.clientDragging[client.uuid].dragging
+        : null
 
     if (image.status === NodeStatus.Deleted) {
       this._sprite.visible = false
@@ -69,8 +70,8 @@ export class CanvasImage {
 
     this._sprite.visible = true
 
-    this._sprite.position.x = image.left + draggingOffset.left
-    this._sprite.position.y = image.top + draggingOffset.top
+    this._sprite.position.x = image.left + (draggingOffset?.left ?? 0)
+    this._sprite.position.y = image.top + (draggingOffset?.top ?? 0)
     this._sprite.width = image.width
     this._sprite.height = image.height
   }

@@ -67,8 +67,6 @@ export class CanvasBoundingBox {
       this._client.getState()
     )
 
-    console.log(`Rendering CanvasBoundingBox ${this.uuid}.`, boundingBox)
-
     if (boundingBox == null) {
       this._graphics.visible = false
       return

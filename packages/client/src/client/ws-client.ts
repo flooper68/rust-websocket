@@ -2,6 +2,7 @@ import { getRandomColor, getRandomFunnyName } from '@shared/common'
 import {
   ConnectClient,
   DocumentSessionCommand,
+  DocumentSessionCommandType,
   DocumentSessionEvent,
   DocumentSessionRoot,
   DocumentSessionState
@@ -44,7 +45,13 @@ export class WsClient {
           )
           return
         } else {
-          console.log(`Received ws command, dispatching.`, data.payload)
+          if (
+            data.payload.type !== DocumentSessionCommandType.MoveClientCursor &&
+            data.payload.type !== DocumentSessionCommandType.MoveDragging
+          ) {
+            console.log(`Received ws command, dispatching.`, data.payload)
+          }
+
           this._documentSessionRoot.dispatch(data.payload)
         }
 
@@ -87,7 +94,12 @@ export class WsClient {
       return
     }
 
-    console.log(`Sending ws command.`, command)
+    if (
+      command.type !== DocumentSessionCommandType.MoveClientCursor &&
+      command.type !== DocumentSessionCommandType.MoveDragging
+    ) {
+      console.log(`Sending ws command.`, command)
+    }
 
     this._client.send(
       JSON.stringify({

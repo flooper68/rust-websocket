@@ -59,13 +59,14 @@ export class CanvasRectangle {
   render() {
     const rectangle = getRectangleOrFail(this.uuid, this._client)
 
-    const client = Object.values(this._client.getState().session.clients).find(
-      (client) => client.selection.includes(this.uuid)
-    )
+    const client = Object.values(
+      this._client.getState().session.selections
+    ).find((selection) => selection.selection.includes(this.uuid))
 
-    const draggingOffset = client?.dragging ?? { left: 0, top: 0 }
-
-    console.log(`Rendering CanvasRectangle ${this.uuid}.`, rectangle)
+    const draggingOffset =
+      client != null
+        ? this._client.getState().session.clientDragging[client.uuid].dragging
+        : null
 
     if (rectangle.status == NodeStatus.Deleted) {
       this._graphics.visible = false
@@ -78,7 +79,7 @@ export class CanvasRectangle {
     this._graphics.tint = color
     this._graphics.width = rectangle.width
     this._graphics.height = rectangle.height
-    this._graphics.position.x = rectangle.left + draggingOffset.left
-    this._graphics.position.y = rectangle.top + draggingOffset.top
+    this._graphics.position.x = rectangle.left + (draggingOffset?.left ?? 0)
+    this._graphics.position.y = rectangle.top + (draggingOffset?.top ?? 0)
   }
 }

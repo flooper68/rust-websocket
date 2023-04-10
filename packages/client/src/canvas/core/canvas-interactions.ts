@@ -119,7 +119,6 @@ export class CanvasInteractions {
     }
 
     if (this._draggingState.confirmed) {
-      console.log(`Moving dragging taget.`)
       this._draggingState.target.draggable.onDraggingProgress(
         e.global.x - this._draggingState.lastPoint.x,
         e.global.y - this._draggingState.lastPoint.y

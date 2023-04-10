@@ -210,25 +210,28 @@ export function Canvas(props: { client: WsClient }) {
           app.renderClientBoundingBox(event.payload.uuid)
           break
         }
-        case SessionEventType.DraggingFinished:
-        case SessionEventType.DraggingStarted:
-        case SessionEventType.DraggingMoved:
         case SessionEventType.NodesSelected: {
           app.renderClientBoundingBox(event.payload.clientUuid)
+          break
+        }
+        case SessionEventType.DraggingFinished:
+        case SessionEventType.DraggingStarted:
+        case SessionEventType.DraggingMoved: {
+          app.renderClientBoundingBox(event.payload.clientUuid)
 
-          const connectedClient =
-            client.getState().session.clients[event.payload.clientUuid]
-          const selectedNodes = connectedClient.selection
+          const selection =
+            client.getState().session.selections[event.payload.clientUuid]
 
-          selectedNodes.forEach((nodeUuid) => {
+          selection.selection.forEach((nodeUuid) => {
             app.renderNode(nodeUuid)
           })
+
           break
         }
         case DocumentEventType.NodeMoved:
         case DocumentEventType.NodeDeleted: {
           const selection = Object.values(
-            client.getState().session.clients
+            client.getState().session.selections
           ).find((c) => c.selection.includes(event.payload.uuid))
 
           if (selection != null) {
@@ -258,7 +261,12 @@ export function Canvas(props: { client: WsClient }) {
           throw new Error(`Unhandled event ${check}.`)
         }
       }
-      measure()
+      if (
+        event.type !== SessionEventType.ClientCursorMoved &&
+        event.type !== SessionEventType.DraggingMoved
+      ) {
+        measure()
+      }
     })
 
     app.initialize(client.getState())

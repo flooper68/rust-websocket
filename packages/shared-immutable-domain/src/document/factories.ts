@@ -6,12 +6,15 @@ import {
   ImageUrl,
   NodeKind,
   NodeStatus,
-  NodeUuid
+  NodeUuid,
+  PositionValue
 } from './types.js'
 
 interface RectangleFactoryProps {
   uuid: NodeUuid
   fill: Fill
+  left: PositionValue
+  top: PositionValue
 }
 
 export type RectangleFactory = (props: RectangleFactoryProps) => ActiveRectangle
@@ -22,8 +25,8 @@ const createRectangle: RectangleFactory = (props) => {
     kind: NodeKind.Rectangle,
     status: NodeStatus.Active,
     fill: props.fill,
-    left: (Math.random() - 0.5) * 500,
-    top: (Math.random() - 0.5) * 500,
+    left: props.left,
+    top: props.top,
     width: 100,
     height: 100
   }
@@ -32,6 +35,8 @@ const createRectangle: RectangleFactory = (props) => {
 interface ImageFactoryProps {
   uuid: NodeUuid
   url: ImageUrl
+  left: PositionValue
+  top: PositionValue
   imageWidth: DimensionValue
   imageHeight: DimensionValue
 }
@@ -46,8 +51,8 @@ const createImage: ImageFactory = (props) => {
     url: props.url,
     imageWidth: props.imageWidth,
     imageHeight: props.imageHeight,
-    left: (Math.random() - 0.5) * 500,
-    top: (Math.random() - 0.5) * 500,
+    left: props.left,
+    top: props.top,
     width: props.imageWidth,
     height: props.imageHeight
   }

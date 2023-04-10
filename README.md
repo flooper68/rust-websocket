@@ -2,9 +2,6 @@
 
 ## Next steps
 
-- Add undo redo back in
-  - Add command builder
-  - All commands
 - Improve and test sync race conditions
 - Clean up old domains
 - Use exhaustive matching everywhere

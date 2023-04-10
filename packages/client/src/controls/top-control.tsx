@@ -36,13 +36,22 @@ export function TopControl(props: {
       new CreateRectangle({
         uuid: v4(),
         clientUuid: CLIENT_UUID,
-        fill: getRandomColor()
+        fill: getRandomColor(),
+        left: (Math.random() - 0.5) * 500,
+        top: (Math.random() - 0.5) * 500
       })
     )
   }, [client])
 
   const createImage = useCallback(() => {
-    client.dispatch(new CreateImage({ uuid: v4(), clientUuid: CLIENT_UUID }))
+    client.dispatch(
+      new CreateImage({
+        uuid: v4(),
+        clientUuid: CLIENT_UUID,
+        left: (Math.random() - 0.5) * 500,
+        top: (Math.random() - 0.5) * 500
+      })
+    )
   }, [client])
 
   useEffect(() => {
@@ -53,7 +62,8 @@ export function TopControl(props: {
         case SessionEventType.LastClientCommandRedone:
         case SessionEventType.LastClientCommandRedoSkipped:
         case SessionEventType.ClientCommandAddedToHistory: {
-          const connectedClient = client.getState().session.clients[CLIENT_UUID]
+          const connectedClient =
+            client.getState().session.clientCommands[CLIENT_UUID]
 
           setUndoEnabled(connectedClient.undoStack.length > 0)
           setRedoEnabled(connectedClient.redoStack.length > 0)

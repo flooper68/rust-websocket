@@ -91,8 +91,6 @@ export class CanvasCursor {
     const client =
       this._client.getState().session.clients[parseClientCursorUuid(this.uuid)]
 
-    console.log(`Rendering CanvasCursor ${this.uuid}.`, client)
-
     if (!client) {
       this._border.visible = false
       this._cursor.visible = false
