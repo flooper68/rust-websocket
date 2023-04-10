@@ -1,23 +1,5 @@
-import { DocumentSessionState } from './document-session-root.js'
 import { Fill, ImageUrl, NodeUuid, PositionValue } from './document/types.js'
-import { addNodeToSelection } from './handlers/add-node-to-selection.js'
-import { connectClient } from './handlers/connect-client.js'
-import { createImage } from './handlers/create-image.js'
-import { disconnectClient } from './handlers/disconnect-client.js'
-import { lockSelection } from './handlers/lock-selection.js'
-import { moveClientCursor } from './handlers/move-client-cursor.js'
-import { moveDragging } from './handlers/move-dragging.js'
-import { selectNodes } from './handlers/select-nodes.js'
-import { setImageSelectionUrl } from './handlers/set-image-selection-url.js'
-import { setRectangleSelectionFill } from './handlers/set-rectangle-selection-fill.js'
-import { startDragging } from './handlers/start-dragging.js'
-import { unlockSelection } from './handlers/unlock-selection.js'
-import {
-  ClientColor,
-  ClientName,
-  ClientUuid,
-  DocumentSessionEvent
-} from './session/types.js'
+import { ClientColor, ClientName, ClientUuid } from './session/types.js'
 
 export enum DocumentSessionCommandType {
   LockSelection = 'LockSelection',
@@ -227,23 +209,3 @@ export type DocumentSessionCommand =
   | MoveDragging
   | UndoClientCommand
   | RedoClientCommand
-
-export interface CommandContext {
-  getState: () => DocumentSessionState
-  dispatch: (event: DocumentSessionEvent[]) => void
-}
-
-export const DocumentSessionCommands = {
-  lockSelection,
-  unlockSelection,
-  setRectangleSelectionFill,
-  setImageSelectionUrl,
-  connectClient,
-  disconnectClient,
-  moveClientCursor,
-  createImage,
-  selectNodes,
-  addNodeToSelection,
-  startDragging,
-  moveDragging
-}

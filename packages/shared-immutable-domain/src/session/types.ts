@@ -109,7 +109,7 @@ export class LastClientCommandUndone {
   constructor(public readonly payload: { clientUuid: ClientUuid }) {}
 }
 
-export class LastClientCommandUndoSkipped {
+export class LastClientCommandUndoSkipped{
   readonly type = SessionEventType.LastClientCommandUndoSkipped
   constructor(public readonly payload: { clientUuid: ClientUuid }) {}
 }
